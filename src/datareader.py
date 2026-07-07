@@ -2,7 +2,7 @@ from massive import RESTClient
 from massive.rest.futures import FuturesAgg
 from pprint import pprint
 import json
-import types
+from typedefs import Limit
 
 def read_data(massive_api: str, tickers: list[str], limit: Limit, out_file: str) -> None:
     client = RESTClient(massive_api);
