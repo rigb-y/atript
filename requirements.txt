@@ -1,3 +1,1 @@
 massive
-# Available in the main channel (conda)
-python-dotenv
