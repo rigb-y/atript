@@ -25,5 +25,5 @@ def read_data(massive_api: str, tickers: list[str], limit: Limit, out_file: str)
     for agg in mesu6_aggs:
         to_json[agg.ticker].append(agg.__dict__) 
 
-    with open("dump.json", "w") as file:
+    with open(out_file, "w") as file:
         json.dump(to_json, file)
