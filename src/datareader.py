@@ -1,12 +1,8 @@
-from massive import RESTClient
 from massive.rest.futures import FuturesAgg
-from pprint import pprint
 import json
 from typedefs import Limit
 
-def read_data(massive_api: str, tickers: list[str], limit: Limit, out_file: str) -> None:
-    client = RESTClient(massive_api);
-
+def read_data(client, massive_api: str, tickers: list[str], limit: Limit, out_file: str) -> None:
     # TODO: Use all tickers in tickers
     mesu6_aggs: list[FuturesAgg | bytes] = []
     for a in client.list_futures_aggregates(
