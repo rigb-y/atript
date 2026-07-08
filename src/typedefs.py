@@ -1,5 +1,5 @@
+from dataclasses import dataclass
+@dataclass
 class Limit:
-    limit: int = 100
+    limit: int
 
-    def __init__(self: Limit, limit: int):
-        self.limit = limit

@@ -3,6 +3,8 @@ from secrets import get_massive_api_key
 from datareader import read_data
 from typedefs import Limit
 import boto3
+from pathlib import Path
+import os
 from boto import write_json_to_bucket, read_bucket_json_to_json
 from names import get_output_name
 from pprint import pprint
@@ -36,10 +38,12 @@ s3 = boto3.client(
 )
 
 def main(*args, **kwargs) -> None: 
+    if not Path("dumps").exists():
+        os.mkdir("dumps")
+
     file: str = get_output_name()
-    identifier: str = file.removeprefix("./")
     read_data(MASSIVE_CLIENT, KEYS["MASSIVE_API"], TICKERS, Limit(100), file)
-    write_json_to_bucket(s3, KEYS["R2_BUCKET"], identifier, file)
+    write_json_to_bucket(s3, KEYS["R2_BUCKET"], file)
     # pprint(read_bucket_json_to_json(s3, KEYS["R2_BUCKET"], identifier))
 
 if __name__ == '__main__':

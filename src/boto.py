@@ -1,12 +1,12 @@
 import json
 from botocore.exceptions import ClientError
 
-def write_json_to_bucket(s3, bucket_name: str, identifier: str, file: str):
+def write_json_to_bucket(s3, bucket_name: str, file: str):
     try:
         with open(file, "rb") as _file:
             s3.put_object(
                     Bucket=bucket_name,
-                    Key=identifier,
+                    Key=file,
                     Body=_file,
                     ContentType="application/json",
             )
