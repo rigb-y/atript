@@ -19,3 +19,7 @@ def read_bucket_json_to_json(s3, bucket_name: str, identifier: str):
           .read()
           .decode("utf-8")
     )
+
+# TODO: Implement this
+def get_all_bucket_objects(s3, bucket_name: str) -> list[str]: 
+    return [""]
