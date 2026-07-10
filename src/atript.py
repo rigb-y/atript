@@ -12,7 +12,7 @@ import anthropic
 import argparse
 import json
 from massive.rest.futures import FuturesAgg
-from atript_secrets import (
+from atript_secrets import ( 
                      get_massive_api_key,
                      get_account_id,
                      get_bucket_name,
@@ -33,37 +33,20 @@ KEYS: dict[str,str] = {
         "CLAUDE_KEY":  get_claude_key()
 }
 
-
-
-
 TICKERS: list[str] = ["MESU6"]
-
 MASSIVE_CLIENT = RESTClient(KEYS["MASSIVE_API"]);
-
 CLAUDE_MODEL = "claude-sonnet-5"
 MAX_TOKENS = 5000
 
-# s3 = boto3.client(
-#     service_name="s3",
-#     endpoint_url=KEYS["ENDPOINT_URL"],
-#     aws_access_key_id=KEYS["AWS_ACCESS_KEY"],
-#     aws_secret_access_key=KEYS["AWS_SECRET_ACCESS_KEY"],
-#     region_name="auto"
-# )
-
-def main(*args, **kwargs) -> None: 
-
-    parser = argparse.ArgumentParser()
-
+def main() -> None:
     if not Path("symbol_data").exists():
         os.mkdir("symbol_data")
 
     client = anthropic.Anthropic(api_key=KEYS['CLAUDE_KEY'])
 
-    file: str = get_output_name()
-    data = read_data(MASSIVE_CLIENT, KEYS["MASSIVE_API"], TICKERS, Limit(100), file)
-
-    make_csv(data)
+    data = read_data(MASSIVE_CLIENT, TICKERS, Limit(100))
+    for ticker, d in data.items():
+        make_csv(ticker,d)
     return
 
     with open(file, 'rb') as f:
