@@ -54,6 +54,7 @@ MAX_TOKENS = 5000
 def main(*args, **kwargs) -> None: 
 
     parser = argparse.ArgumentParser()
+
     if not Path("symbol_data").exists():
         os.mkdir("symbol_data")
 

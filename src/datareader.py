@@ -5,6 +5,16 @@ from pprint import pprint
 from collections import defaultdict
 import pandas as pd
 
+'''
+ TODO: 
+     (1) Command Line arg for tickers to include. --tickers=[...]
+     (2) Fix file naming data/{ticker}.csv
+     (3) add a claude skills.md file
+        skill = client.beta.skills.create(
+                files=[b"Example data"],
+        )
+'''
+
 def read_data(client, massive_api: str, tickers: list[str], limit: Limit, out_file: str) -> None:
     # TODO: Use all tickers in tickers
     mesu6_aggs: list[FuturesAgg | bytes] = []
