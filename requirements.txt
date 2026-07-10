@@ -1,4 +1,6 @@
 massive
-# Available in the main channel (conda)
 python-dotenv
 boto3
+pandas
+numpy
+anthropic
