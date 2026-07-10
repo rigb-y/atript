@@ -10,7 +10,7 @@ def read_data(client, massive_api: str, tickers: list[str], limit: Limit, out_fi
         resolution="15min",
         window_start_gte="2026-07-06",
         sort="window_start.desc",
-        limit=100,
+        limit=limit.limit,
     ):
         mesu6_aggs.append(a)
 
