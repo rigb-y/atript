@@ -30,12 +30,12 @@ def read_data(client, tickers: list[str], limit: Limit) -> dict[str, list[Future
 
 def make_csv(ticker: str, data: list[FuturesAgg | bytes]) -> None:
     d = defaultdict(lambda: [])
-
     for futuresagg in data:
         for k,v in (futuresagg.__dict__).items():
             d[k].append(v)
 
     df = pd.DataFrame(d)
+    df = df.drop(labels=["settlement_price"], axis=1)
     f_name: str = get_output_name(ticker)
     df.to_csv(f"{f_name}.csv", index=False)
 
