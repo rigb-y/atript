@@ -5,7 +5,7 @@
   amsmath, amsthm, amssymb, mathtools, dsfont, units,   % Math typesetting
   graphicx, wrapfig, subfig, float,                     % Figures and graphics formatting
   listings, color, inconsolata, pythonhighlight,        % Code formatting
-  fancyhdr, sectsty, hyperref, enumerate, enumitem, tabularx}   	% Headers/footers, section fonts, links, lists
+  fancyhdr, sectsty, hyperref, enumerate, enumitem, tabularx, booktabs}   	% Headers/footers, section fonts, links, lists
 
 % Set page margins
 \usepackage[left=1.5in, right=1.5in, top=1.2in, bottom=1in, headsep=.25in]{geometry}
@@ -209,6 +209,76 @@
             \bottomrule
         \end{tabularx}
     \end{center}
+    RSI is commonly interpreted as follows:
+    \begin{itemize}
+        \item \textbf{Above 70:} frequently described as overbought.
+        \item \textbf{Below 30:} frequently described as oversold.
+        \item \textbf{Above 50:} upward momentum is dominant.
+        \item \textbf{Below 50:} downward momentum is dominant.
+    \end{itemize}
+    To calculate the RSI for a time $t$, we need
+    \begin{align*}
+        RS_{t} = \frac{\text{AvgGain}_{t}}{\text{AvgLoss}_{t}}
+    .\end{align*}
+    For each candlestick $c_{j}$, compute the close-to-close change.
+    \begin{align*}
+        \Delta_{c_{j}} = \text{Close}_{c_{j}} - \text{Close}_{c_{j-1}}
+    .\end{align*}
+    The change is called a gain if it is greater than zero, it is called a loss if it is less than zero.
+    \begin{align*}
+        \text{Gain}_{c_{j}} = \max(\Delta_{c_{j}}, 0), \quad 
+        \text{Loss}_{c_{j}} = \max(-\Delta_{c_{j}}, 0)
+    .\end{align*}
+    Then, compute (for a 14-period RSI)
+    \begin{align*}
+        \text{AvgGain}_{14} = \frac{\sum_{j=1}^{14}\text{Gain}_{c_{j}}}{14}, \quad
+        \text{AvgLoss}_{14} = \frac{\sum_{j=1}^{14}\text{Loss}_{c_{j}}}{14}
+    .\end{align*}
+
+    \bigbreak \noindent 
+    \subsection{Wilder's smoothing}
+    \bigbreak \noindent 
+    Wilder’s smoothing is a recursive moving-average method used in RSI, ATR, and several other indicators. It gives more weight to recent observations while retaining information from all earlier observations.
+    \bigbreak \noindent 
+    For a period $n$, the update formula is 
+    \begin{align*}
+       S_{t} = \frac{(n-1)S_{t-1} + X_{t}}{n} 
+    .\end{align*}
+    \begin{itemize}
+        \item $X_{t}$ is the newest observation.
+        \item $S_{t-1}$ is the previous smoothed value.
+        \item $S_{t}$ is the new smoothed value.
+        \item $n$ is the smoothing period.
+    \end{itemize}
+    For the relative strength, instead of using
+    \begin{align*}
+        \text{AvgGain}_{14} = \frac{\sum_{j=1}^{14}\text{Gain}_{c_{j}}}{14}, \quad
+        \text{AvgLoss}_{14} = \frac{\sum_{j=1}^{14}\text{Loss}_{c_{j}}}{14}
+    ,\end{align*}
+    we use Wilder's smoothing:
+    \begin{align*}
+        \text{AvgGain}_{c_{j}} &= \frac{13\text{AvgGain}_{c_{j-1}}  + \text{Gain}_{c_{j}}}{14} \\
+        \text{AvgLoss}_{c_{j}} &= \frac{13\text{AvgLoss}_{c_{j-1}}  + \text{Loss}_{c_{j}}}{14} 
+    .\end{align*}
+    Then,
+    \begin{align*}
+        RS_{c_{j}} = \frac{\text{AvgGain}_{c_{j}}}{\text{AvgLoss}_{c_{j}}}
+    .\end{align*}
+    Consequently,
+    \begin{align*}
+        RSI_{c_{j}} = 100\left(\frac{RS_{c_{j}}}{1+RS_{c_{j}}}\right)
+    .\end{align*}
+    The recursive formula requires a previous smoothed value, so the first value is normally initialized with a simple average of the first $n$ observations:
+    \begin{align*}
+        S_{n} = \frac{X_{1} + X_{2} + \cdots + X_{n}}{n}
+    .\end{align*}
+    For the RSI, the initial average gain and initial average loss are simply the averages
+    \begin{align*}
+        \text{AvgGain}_{14} = \frac{\sum_{j=1}^{14}\text{Gain}_{c_{j}}}{14}, \quad
+        \text{AvgLoss}_{14} = \frac{\sum_{j=1}^{14}\text{Loss}_{c_{j}}}{14}
+    .\end{align*}
+    Every later value uses Wilder's recursive update.
+
     
 
     \section{VWAP (Volume Weighted Average Price)}
