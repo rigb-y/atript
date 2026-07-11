@@ -1,4 +1,3 @@
-
 \documentclass[letterpaper, 11pt]{article}
 
 
@@ -6,7 +5,7 @@
   amsmath, amsthm, amssymb, mathtools, dsfont, units,   % Math typesetting
   graphicx, wrapfig, subfig, float,                     % Figures and graphics formatting
   listings, color, inconsolata, pythonhighlight,        % Code formatting
-  fancyhdr, sectsty, hyperref, enumerate, enumitem }   	% Headers/footers, section fonts, links, lists
+  fancyhdr, sectsty, hyperref, enumerate, enumitem, tabularx}   	% Headers/footers, section fonts, links, lists
 
 % Set page margins
 \usepackage[left=1.5in, right=1.5in, top=1.2in, bottom=1in, headsep=.25in]{geometry}
@@ -59,6 +58,18 @@
   framexleftmargin=1.6em,                               % Extend frame left margin to include line numbers
   breaklines=true,                                      % Wrap long lines of code
   postbreak=\mbox{\textcolor{greenText}{$\hookrightarrow$}\space} % Mark wrapped lines with an arrow
+=======
+% Page geometry
+\geometry{
+  left=1.5in,
+  right=1.5in,
+  top=1in,
+  bottom=1in
+}
+
+% Change the title
+\hypersetup{
+    pdftitle={Computation Ref}
 }
 
 % Set all code listings to be styled with the above settings
@@ -147,19 +158,66 @@
 \renewcommand{\footrulewidth}{0pt}
 \renewcommand{\headrulewidth}{0pt}
 
+% Page geometry
+\geometry{
+  left=1.5in,
+  right=1.5in,
+  top=1in,
+  bottom=1in
+}
+
 \begin{document}
     % \maketitle
     \tableofcontents
     \pagebreak 
     \section{Relative Strength Index}
     \bigbreak \noindent 
+    Relative strength is the ratio of average upward price movement to average downward price movement over a selected period:
+    \begin{align*}
+        RS = \frac{\text{Average gain}}{\text{Average loss}}
+    .\end{align*}
+    Suppose the relative strength is 
+    \begin{align*}
+        RS = 2.0
+    .\end{align*}
+    This means that over the measured period, upward price movement has been twice as large as downward price movement.
+    \begin{itemize}
+        \item $RS>1$: gains have been larger than losses.
+        \item $RS=1$: gains and losses have been equal.
+        \item $RS<1$: losses have been larger than gains.
+        \item $RS\to\infty$: there have been gains but essentially no losses.
+        \item $RS=0$: there have been losses but no gains.
+    \end{itemize}
+    The Relative Strength Index, or RSI, converts relative strength into a bounded value between 0 and 100:
+    \begin{align*}
+        RSI = 100 - \frac{100}{1+RS} = 100\left(\frac{RS}{1+RS}\right)
+    .\end{align*}
+    As $RS \to \infty$, $RS / (1+RS) \to 1$, so $RSI \to 100$. When $RS = 1$, $RSI  = 50$. When $RS \to 0$, $RSI \to 0$.
+    \begin{center}
+        \begin{tabularx}{\textwidth}{@{}ll@{}}
+            \toprule
+            \textbf{Relative Strength}&	\textbf{RSI} \\
+            \midrule
+            0	&0\\[2ex]
+            0.25	&20\\[2ex]
+            0.5	&33.33\\[2ex]
+            1	&50\\[2ex]
+            2	&66.67\\[2ex]
+            3	&75\\[2ex]
+            4	&80\\[2ex]
+            Very large	&Approaches 100 \\
+            \bottomrule
+        \end{tabularx}
+    \end{center}
     
 
-
-
-
-    
     \section{VWAP (Volume Weighted Average Price)}
     The average price a stock has traded at throughout the day weighted by volume.
     Instead of treating each price the same, VWAP assigns more weight to prices where trading activity was heavier.
+
+    
+
+
+
+
 \end{document}

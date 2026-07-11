@@ -8,3 +8,5 @@ dumps/
 *.pdf 
 *.synctex.gz 
 *.toc
+*.log
+minted_main
