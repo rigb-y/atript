@@ -21,7 +21,7 @@ def read_data(client, tickers: list[str], limit: Limit) -> dict[str, list[Future
                 ticker=ticker,
                 resolution="15min",
                 window_start_gte="2026-07-06",
-                sort="window_start.desc",
+                sort="window_start.asc",
                 limit=limit.limit,
                 ):
             ticker_data[ticker].append(a)

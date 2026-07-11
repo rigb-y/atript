@@ -1,5 +1,5 @@
 # Fdb version 4
-["lualatex"] 1783782820.675 "main.tex" "main.pdf" "main" 1783782823.87301 2
+["lualatex"] 1783782899.93306 "main.tex" "main.pdf" "main" 1783782903.38076 2
   "/home/angel/.texlive/texmf-var/luatex-cache/generic/fonts/otl/fontawesome5brands-regular-400.luc" 1782059655.11045 180102 f7147e17e8de42719f8456d2132a6f53 ""
   "/home/angel/.texlive/texmf-var/luatex-cache/generic/fonts/otl/fontawesome5free-solid-900.luc" 1782059655.01545 380927 d6fe6e53c3a00de94cfec2728177f905 ""
   "/home/angel/.texlive/texmf-var/luatex-cache/generic/fonts/otl/lmroman10-regular.luc" 1780431114.68909 127314 7c5efae986e60281c7ad546cf8ed9a14 ""
@@ -372,9 +372,9 @@
   "/usr/share/texmf-dist/tex/luatex/luatexbase/luatexbase.sty" 1775415801 10170 b1a2248f43cab899e3fe36f676176865 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1780418691 5385779 47c0c393a77fd4a098bacfd57d66b88a ""
   "/var/lib/texmf/web2c/luahbtex/lualatex.fmt" 1780418792 5656709 0ea8411d4f5958f8d7bd4ecb79a3074c ""
-  "main.aux" 1783782823.63583 944 1eb6c63a3dbf7832408c6338ae9cd3aa "lualatex"
-  "main.tex" 1783782820.16898 778 6f92a88eb9e896928e67626e644dca30 ""
-  "main.toc" 1783782823.63683 81 ceddf09e59835393acab39eea1c72956 "lualatex"
+  "main.aux" 1783782903.13683 944 1eb6c63a3dbf7832408c6338ae9cd3aa "lualatex"
+  "main.tex" 1783782897.24486 808 232f7708bd51c2905ef627faf021e641 ""
+  "main.toc" 1783782903.13922 81 ceddf09e59835393acab39eea1c72956 "lualatex"
   (generated)
   "main.aux"
   "main.log"

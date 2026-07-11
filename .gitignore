@@ -1,3 +1,4 @@
 .env
 __pycache__
 symbol_data/
+dumps/
