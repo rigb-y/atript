@@ -2,3 +2,9 @@
 __pycache__
 symbol_data/
 dumps/
+*.aux  
+*.fdb_latexmk 
+*.fls
+*.pdf 
+*.synctex.gz 
+*.toc
