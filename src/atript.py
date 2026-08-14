@@ -22,7 +22,7 @@ from atript_secrets import (
                      get_claude_key
                      )
 
-# VWAP, RSI, EMA, ATR, bollinger Bands (20, 2\sigma)
+# VWAP, RSI, EMA, ATR, bollinger Bands (20, 2\sigma), MACD
 
 KEYS: dict[str,str] = {
         "R2_ACCOUNT_ID" : get_account_id(),

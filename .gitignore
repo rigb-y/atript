@@ -10,3 +10,5 @@ dumps/
 *.toc
 *.log
 minted_main
+ref
+SKILL.MD

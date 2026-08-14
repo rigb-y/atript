@@ -4,3 +4,4 @@ boto3
 pandas
 numpy
 anthropic
+chronos-forecasting>=2.0
