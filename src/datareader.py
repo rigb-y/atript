@@ -1,34 +1,46 @@
 from massive.rest.futures import FuturesAgg
 import json
 from typedefs import Limit
-from pprint import pprint
 from collections import defaultdict
 import pandas as pd
+from pprint import pprint
+from collections.abc import Generator
+from datetime import datetime
 
-def read_data(client, massive_api: str, tickers: list[str], limit: Limit, out_file: str) -> None:
-    # TODO: Use all tickers in tickers
-    mesu6_aggs: list[FuturesAgg | bytes] = []
+'''
+Fetches OHLC data from Massive.com.
 
-    for a in client.list_futures_aggregates(
-        ticker="MESU6",
-        resolution="15min",
-        window_start_gte="2026-07-06",
-        sort="window_start.desc",
-        limit=100,
-    ):
-        mesu6_aggs.append(a)
+@param client A massive Restclient instance.
+@param tickers A list of futures tickers.
+@param limit A limit on the amount of.
+@param window_start The start time of the candlesticks. A Unix timestamp or YYYY-MM-DD value
+@return A list of 
+'''
+def fetch_data(client, tickers: list[str], limit: Limit, window_start: int | str) -> dict[list[FuturesAgg | bytes]]:
+    data: dict[str, Generator[FuturesAgg]] = dict()
 
-    return mesu6_aggs
+    if (isinstance(window_start, str)):
+        time: list[str] = window_start.strip().split('-')
+        time = datetime(*time)
 
-def make_csv(data: list[FuturesAgg | bytes]) -> None:
+    for ticker in tickers:
+        aggregates: list[FuturesAgg] = client.list_futures_aggregates(
+                ticker=ticker,
+                resolution="15min",
+                window_start_gte=window_start,
+                sort="window_start.desc",
+                limit=limit.limit,
+                )
+        data[ticker] = aggregates
+    return data
+
+def make_parquet(data: dict[str,Generator[FuturesAgg]]) -> None:
+
     d = defaultdict(lambda: [])
 
     for futuresagg in data:
         for k,v in (futuresagg.__dict__).items():
             d[k].append(v)
-
     df = pd.DataFrame(d)
-    print(df.head(10))
-    df.to_csv("data.csv", index=False)
-
+    df.to_parquet("data.csv", index=False)
 
