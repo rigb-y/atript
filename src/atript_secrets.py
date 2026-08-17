@@ -14,6 +14,7 @@ def get_bucket_name() -> str | None:
 
 def get_access_key_id() -> str | None:
     return os.getenv("ACCESS_KEY_ID")
+
 def get_secret_access_key() -> str | None:
     return os.getenv("SECRET_ACCESS_KEY")
 
