@@ -1,0 +1,293 @@
+\documentclass[letterpaper, 11pt]{article}
+
+
+\usepackage{
+  amsmath, amsthm, amssymb, mathtools, dsfont, units,   % Math typesetting
+  graphicx, wrapfig, subfig, float,                     % Figures and graphics formatting
+  listings, color, inconsolata, pythonhighlight,        % Code formatting
+  fancyhdr, sectsty, hyperref, enumerate, enumitem, tabularx, booktabs}   	% Headers/footers, section fonts, links, lists
+
+% Set page margins
+\usepackage[left=1.5in, right=1.5in, top=1.2in, bottom=1in, headsep=.25in]{geometry}
+\usepackage[bottom]{footmisc}
+
+% Set line spacing
+\renewcommand{\baselinestretch}{1.12}
+
+% Set spacing between paragraphs
+\setlength{\parskip}{1.5mm}
+
+% Allow multi-line equations to break onto the next page
+\allowdisplaybreaks
+
+
+% Set font sizes for section and subsection titles
+\sectionfont{\fontsize{13}{15}\selectfont}
+\subsectionfont{\fontsize{11}{15}\selectfont}
+
+% Set reference section title font size the same as the section font size
+\renewcommand{\refname}{\fontsize{13}{15}\selectfont\bf{References}}
+
+% Set link colors for labeled items and citations (blue) and citations (red)
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue}
+
+% Abstract settings
+\renewenvironment{abstract}
+{\small\begin{quote}\noindent \par{\sc \abstractname.}}
+{\noindent\end{quote}}
+
+% --- Settings for printing computer code ---
+
+% Define colors for green text (comments), grey text (line numbers),
+% green frame around code, 
+\definecolor{greenText}{rgb}{0.5, 0.7, 0.5}
+\definecolor{greyText}{rgb}{0.5, 0.5, 0.5}
+\definecolor{codeFrame}{rgb}{0.5, 0.7, 0.5}
+
+% Define code settings
+\lstdefinestyle{code} {
+  frame=single, rulecolor=\color{codeFrame},            % Include a green frame around the code
+  numbers=left,                                         % Include line numbers
+  numbersep=8pt,                                        % Add space between line numbers and frame
+  numberstyle=\tiny\color{greyText},                    % Line number font size (tiny) and color (grey)
+  commentstyle=\color{greenText},                       % Put comments in green text
+  basicstyle=\linespread{1.1}\ttfamily\footnotesize,    % Set code line spacing
+  keywordstyle=\ttfamily\footnotesize,                  % No special formatting for keywords
+  showstringspaces=false,                               % No marks for spaces
+  xleftmargin=1.95em,                                   % Align code frame with main text
+  framexleftmargin=1.6em,                               % Extend frame left margin to include line numbers
+  breaklines=true,                                      % Wrap long lines of code
+  postbreak=\mbox{\textcolor{greenText}{$\hookrightarrow$}\space} % Mark wrapped lines with an arrow
+=======
+% Page geometry
+\geometry{
+  left=1.5in,
+  right=1.5in,
+  top=1in,
+  bottom=1in
+}
+
+% Change the title
+\hypersetup{
+    pdftitle={Computation Ref}
+}
+
+% Set all code listings to be styled with the above settings
+\lstset{style=code}
+
+% --- Math/Statistics commands ---
+
+% Add a reference number to a single line of a multi-line equation
+% Usage: "\numberthis\label{labelNameHere}" in an align or gather environment
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+
+% Shortcut for bold text in math mode, e.g. $\b{X}$
+\let\b\mathbf
+
+% Shortcut for bold Greek letters, e.g. $\bg{\beta}$
+\let\bg\boldsymbol
+
+% Shortcut for calligraphic script, e.g. %\mc{M}$
+\let\mc\mathcal
+
+% \mathscr{(letter here)} is sometimes used to denote vector spaces
+\usepackage[mathscr]{euscript}
+
+% Convergence: right arrow with optional text on top
+% E.g. $\converge[w]$ for weak convergence
+\newcommand{\converge}[1][]{\xrightarrow{#1}}
+
+% Normal distribution: arguments are the mean and variance
+% E.g. $\normal{\mu}{\sigma}$
+\newcommand{\normal}[2]{\mathcal{N}\left(#1,#2\right)}
+
+% Uniform distribution: arguments are the left and right endpoints
+% E.g. $\unif{0}{1}$
+\newcommand{\unif}[2]{\text{Uniform}(#1,#2)}
+
+% Independent and identically distributed random variables
+% E.g. $ X_1,...,X_n \iid \normal{0}{1}$
+\newcommand{\iid}{\stackrel{\smash{\text{iid}}}{\sim}}
+
+% Equality: equals sign with optional text on top
+% E.g. $X \equals[d] Y$ for equality in distribution
+\newcommand{\equals}[1][]{\stackrel{\smash{#1}}{=}}
+
+% Math mode symbols for common sets and spaces. Example usage: $\R$
+\newcommand{\R}{\mathbb{R}}   % Real numbers
+\newcommand{\C}{\mathbb{C}}   % Complex numbers
+\newcommand{\Q}{\mathbb{Q}}   % Rational numbers
+\newcommand{\Z}{\mathbb{Z}}   % Integers
+\newcommand{\N}{\mathbb{N}}   % Natural numbers
+\newcommand{\F}{\mathcal{F}}  % Calligraphic F for a sigma algebra
+\newcommand{\El}{\mathcal{L}} % Calligraphic L, e.g. for L^p spaces
+
+% Math mode symbols for probability
+\newcommand{\pr}{\mathbb{P}}    % Probability measure
+\newcommand{\E}{\mathbb{E}}     % Expectation, e.g. $\E(X)$
+\newcommand{\var}{\text{Var}}   % Variance, e.g. $\var(X)$
+\newcommand{\cov}{\text{Cov}}   % Covariance, e.g. $\cov(X,Y)$
+\newcommand{\corr}{\text{Corr}} % Correlation, e.g. $\corr(X,Y)$
+\newcommand{\B}{\mathcal{B}}    % Borel sigma-algebra
+
+% Other miscellaneous symbols
+\newcommand{\tth}{\text{th}}	% Non-italicized 'th', e.g. $n^\tth$
+\newcommand{\Oh}{\mathcal{O}}	% Big-O notation, e.g. $\O(n)$
+\newcommand{\1}{\mathds{1}}		% Indicator function, e.g. $\1_A$
+
+\DeclareMathOperator*{\argmax}{argmax}    % Argmax, e.g. $\argmax_{x\in[0,1]} f(x)$
+\DeclareMathOperator*{\argmin}{argmin}    % Argmin, e.g. $\argmin_{x\in[0,1]} f(x)$
+\DeclareMathOperator*{\spann}{Span}       % Span, e.g. $\spann\{X_1,...,X_n\}$
+\DeclareMathOperator*{\bias}{Bias}        % Bias, e.g. $\bias(\hat\theta)$
+\DeclareMathOperator*{\ran}{ran}          % Range of an operator, e.g. $\ran(T) 
+\DeclareMathOperator*{\dv}{d\!}           % Non-italicized 'with respect to', e.g. $\int f(x) \dv x$
+\DeclareMathOperator*{\diag}{diag}        % Diagonal of a matrix, e.g. $\diag(M)$
+\DeclareMathOperator*{\trace}{trace}      % Trace of a matrix, e.g. $\trace(M)$
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+
+\pagestyle{fancy}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\headrulewidth}{0pt}
+
+% Page geometry
+\geometry{
+  left=1.5in,
+  right=1.5in,
+  top=1in,
+  bottom=1in
+}
+
+\begin{document}
+    % \maketitle
+    \tableofcontents
+    \pagebreak 
+    \section{Relative Strength Index}
+    \bigbreak \noindent 
+    Relative strength is the ratio of average upward price movement to average downward price movement over a selected period:
+    \begin{align*}
+        RS = \frac{\text{Average gain}}{\text{Average loss}}
+    .\end{align*}
+    Suppose the relative strength is 
+    \begin{align*}
+        RS = 2.0
+    .\end{align*}
+    This means that over the measured period, upward price movement has been twice as large as downward price movement.
+    \begin{itemize}
+        \item $RS>1$: gains have been larger than losses.
+        \item $RS=1$: gains and losses have been equal.
+        \item $RS<1$: losses have been larger than gains.
+        \item $RS\to\infty$: there have been gains but essentially no losses.
+        \item $RS=0$: there have been losses but no gains.
+    \end{itemize}
+    The Relative Strength Index, or RSI, converts relative strength into a bounded value between 0 and 100:
+    \begin{align*}
+        RSI = 100 - \frac{100}{1+RS} = 100\left(\frac{RS}{1+RS}\right)
+    .\end{align*}
+    As $RS \to \infty$, $RS / (1+RS) \to 1$, so $RSI \to 100$. When $RS = 1$, $RSI  = 50$. When $RS \to 0$, $RSI \to 0$.
+    \begin{center}
+        \begin{tabularx}{\textwidth}{@{}ll@{}}
+            \toprule
+            \textbf{Relative Strength}&	\textbf{RSI} \\
+            \midrule
+            0	&0\\[2ex]
+            0.25	&20\\[2ex]
+            0.5	&33.33\\[2ex]
+            1	&50\\[2ex]
+            2	&66.67\\[2ex]
+            3	&75\\[2ex]
+            4	&80\\[2ex]
+            Very large	&Approaches 100 \\
+            \bottomrule
+        \end{tabularx}
+    \end{center}
+    RSI is commonly interpreted as follows:
+    \begin{itemize}
+        \item \textbf{Above 70:} frequently described as overbought.
+        \item \textbf{Below 30:} frequently described as oversold.
+        \item \textbf{Above 50:} upward momentum is dominant.
+        \item \textbf{Below 50:} downward momentum is dominant.
+    \end{itemize}
+    To calculate the RSI for a time $t$, we need
+    \begin{align*}
+        RS_{t} = \frac{\text{AvgGain}_{t}}{\text{AvgLoss}_{t}}
+    .\end{align*}
+    For each candlestick $c_{j}$, compute the close-to-close change.
+    \begin{align*}
+        \Delta_{c_{j}} = \text{Close}_{c_{j}} - \text{Close}_{c_{j-1}}
+    .\end{align*}
+    The change is called a gain if it is greater than zero, it is called a loss if it is less than zero.
+    \begin{align*}
+        \text{Gain}_{c_{j}} = \max(\Delta_{c_{j}}, 0), \quad 
+        \text{Loss}_{c_{j}} = \max(-\Delta_{c_{j}}, 0)
+    .\end{align*}
+    Then, compute (for a 14-period RSI)
+    \begin{align*}
+        \text{AvgGain}_{14} = \frac{\sum_{j=1}^{14}\text{Gain}_{c_{j}}}{14}, \quad
+        \text{AvgLoss}_{14} = \frac{\sum_{j=1}^{14}\text{Loss}_{c_{j}}}{14}
+    .\end{align*}
+
+    \bigbreak \noindent 
+    \subsection{Wilder's smoothing}
+    \bigbreak \noindent 
+    Wilder’s smoothing is a recursive moving-average method used in RSI, ATR, and several other indicators. It gives more weight to recent observations while retaining information from all earlier observations.
+    \bigbreak \noindent 
+    For a period $n$, the update formula is 
+    \begin{align*}
+       S_{t} = \frac{(n-1)S_{t-1} + X_{t}}{n} 
+    .\end{align*}
+    \begin{itemize}
+        \item $X_{t}$ is the newest observation.
+        \item $S_{t-1}$ is the previous smoothed value.
+        \item $S_{t}$ is the new smoothed value.
+        \item $n$ is the smoothing period.
+    \end{itemize}
+    For the relative strength, instead of using
+    \begin{align*}
+        \text{AvgGain}_{14} = \frac{\sum_{j=1}^{14}\text{Gain}_{c_{j}}}{14}, \quad
+        \text{AvgLoss}_{14} = \frac{\sum_{j=1}^{14}\text{Loss}_{c_{j}}}{14}
+    ,\end{align*}
+    we use Wilder's smoothing:
+    \begin{align*}
+        \text{AvgGain}_{c_{j}} &= \frac{13\text{AvgGain}_{c_{j-1}}  + \text{Gain}_{c_{j}}}{14} \\
+        \text{AvgLoss}_{c_{j}} &= \frac{13\text{AvgLoss}_{c_{j-1}}  + \text{Loss}_{c_{j}}}{14} 
+    .\end{align*}
+    Then,
+    \begin{align*}
+        RS_{c_{j}} = \frac{\text{AvgGain}_{c_{j}}}{\text{AvgLoss}_{c_{j}}}
+    .\end{align*}
+    Consequently,
+    \begin{align*}
+        RSI_{c_{j}} = 100\left(\frac{RS_{c_{j}}}{1+RS_{c_{j}}}\right)
+    .\end{align*}
+    The recursive formula requires a previous smoothed value, so the first value is normally initialized with a simple average of the first $n$ observations:
+    \begin{align*}
+        S_{n} = \frac{X_{1} + X_{2} + \cdots + X_{n}}{n}
+    .\end{align*}
+    For the RSI, the initial average gain and initial average loss are simply the averages
+    \begin{align*}
+        \text{AvgGain}_{14} = \frac{\sum_{j=1}^{14}\text{Gain}_{c_{j}}}{14}, \quad
+        \text{AvgLoss}_{14} = \frac{\sum_{j=1}^{14}\text{Loss}_{c_{j}}}{14}
+    .\end{align*}
+    Every later value uses Wilder's recursive update.
+
+    
+
+    \section{VWAP (Volume Weighted Average Price)}
+    The average price a stock has traded at throughout the day weighted by volume.
+    Instead of treating each price the same, VWAP assigns more weight to prices where trading activity was heavier.
+
+    
+
+
+
+
+\end{document}
