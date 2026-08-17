@@ -37,7 +37,7 @@ KEYS: dict[str,str] = {
 TICKERS: list[str] = ["MESU6"]
 MASSIVE_CLIENT = RESTClient(KEYS["MASSIVE_API"]);
 
-def preprocess(data: dict[Generator[FuturesAgg]]) -> pd.DataFrame:
+def preprocess(data: dict[str, Generator[FuturesAgg]]) -> pd.DataFrame:
     flat_data: list[dict] = [asdict(e) for ticker in data for e in data[ticker]]
     d = {
             key: [d[key] for d in flat_data] 
