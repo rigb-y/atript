@@ -103,7 +103,14 @@ def main() -> None:
     if not Path("data").exists():
         os.mkdir("data")
 
-    data: dict[str , Generator[FuturesAgg]] = fetch_data(MASSIVE_CLIENT, TICKERS, Limit(100) )
+    # Retrieve stored data.
+    if (Path("Data/data.parquet").exists()):
+        pq: pd.Dataframe = pd.read_parquet("data/data.parquet")
+
+    # Fetch new data.
+    next_window_start: int | None = pq['window_start'].iloc[-1] + 1 if pq is not None else None
+    data: dict[str , Generator[FuturesAgg]] = fetch_data(MASSIVE_CLIENT, TICKERS, Limit(100), next_window_start)
+
     df: pd.DataFrame = preprocess(data)
     print(df.head(20))
 

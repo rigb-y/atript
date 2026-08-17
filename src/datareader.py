@@ -1,5 +1,4 @@
 from massive.rest.futures import FuturesAgg
-import json
 from typedefs import Limit
 from collections import defaultdict
 import pandas as pd
@@ -16,18 +15,20 @@ Fetches OHLC data from Massive.com.
 @param window_start The start time of the candlesticks. A Unix timestamp or YYYY-MM-DD value
 @return A list of 
 '''
-def fetch_data(client, tickers: list[str], limit: Limit, window_start: int | str) -> dict[list[FuturesAgg | bytes]]:
+def fetch_data(client, tickers: list[str], limit: Limit, window_start: int | str | None) -> dict[list[FuturesAgg | bytes]]:
     data: dict[str, Generator[FuturesAgg]] = dict()
+    unix_timestamp: int = window_start
 
     if (isinstance(window_start, str)):
-        time: list[str] = window_start.strip().split('-')
-        time = datetime(*time)
+        time: list[str] = [int(t) for t in window_start.strip().split('-')]
+        dt: datetime = datetime(*time)
+        unix_timestamp = int(dt.timestamp())
 
     for ticker in tickers:
         aggregates: list[FuturesAgg] = client.list_futures_aggregates(
                 ticker=ticker,
                 resolution="15min",
-                window_start_gte=window_start,
+                window_start_gte=unix_timestamp,
                 sort="window_start.desc",
                 limit=limit.limit,
                 )
