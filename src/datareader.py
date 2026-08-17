@@ -1,41 +1,47 @@
 from massive.rest.futures import FuturesAgg
 import json
 from typedefs import Limit
-from pprint import pprint
 from collections import defaultdict
 import pandas as pd
-from names import get_output_name
+from pprint import pprint
+from collections.abc import Generator
+from datetime import datetime
 
 '''
- TODO: 
-     (3) add a claude skills.md file
-        skill = client.beta.skills.create(
-                files=[b"Example data"],
-        )
-'''
+Fetches OHLC data from Massive.com.
 
-def read_data(client, tickers: list[str], limit: Limit) -> dict[str, list[FuturesAgg | bytes]]:
-    ticker_data: dict[str, list[FuturesAgg | bytes]] = defaultdict(lambda: [])
+@param client A massive Restclient instance.
+@param tickers A list of futures tickers.
+@param limit A limit on the amount of.
+@param window_start The start time of the candlesticks. A Unix timestamp or YYYY-MM-DD value
+@return A list of 
+'''
+def fetch_data(client, tickers: list[str], limit: Limit, window_start: int | str) -> dict[list[FuturesAgg | bytes]]:
+    data: dict[str, Generator[FuturesAgg]] = dict()
+
+    if (isinstance(window_start, str)):
+        time: list[str] = window_start.strip().split('-')
+        time = datetime(*time)
+
     for ticker in tickers:
-        for a in client.list_futures_aggregates(
+        aggregates: list[FuturesAgg] = client.list_futures_aggregates(
                 ticker=ticker,
                 resolution="15min",
-                window_start_gte="2026-07-06",
-                sort="window_start.asc",
+                window_start_gte=window_start,
+                sort="window_start.desc",
                 limit=limit.limit,
-                ):
-            ticker_data[ticker].append(a)
+                )
+        data[ticker] = aggregates
+    return data
 
-    return ticker_data
 
-def make_csv(ticker: str, data: list[FuturesAgg | bytes]) -> None:
+def make_parquet(data: dict[str,Generator[FuturesAgg]]) -> None:
+
     d = defaultdict(lambda: [])
+
     for futuresagg in data:
         for k,v in (futuresagg.__dict__).items():
             d[k].append(v)
-
     df = pd.DataFrame(d)
-    df = df.drop(labels=["settlement_price"], axis=1)
-    f_name: str = get_output_name(ticker)
-    df.to_csv(f"{f_name}.csv", index=False)
+    df.to_parquet("data.csv", index=False)
 
