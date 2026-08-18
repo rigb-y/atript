@@ -11,7 +11,8 @@ from dataclasses import asdict
 from massive.rest.futures import FuturesAgg
 from numpy.typing import ArrayLike
 import numpy as np
-from collections.abc import Generator
+from typing import Any
+from collections.abc import Generator, Sequence
 from atript_secrets import (
                      get_massive_api_key,
                      get_account_id,
@@ -24,7 +25,7 @@ from atript_secrets import (
 
 # VWAP, RSI, EMA, ATR, bollinger Bands (20, 2\sigma), MACD
 
-KEYS: dict[str,str] = {
+KEYS: dict[str,str | None] = {
         "R2_ACCOUNT_ID" : get_account_id(),
         "R2_BUCKET" : get_bucket_name(),
         "ENDPOINT_URL" : get_s3_api_key(),
@@ -38,7 +39,7 @@ TICKERS: list[str] = ["MESU6"]
 MASSIVE_CLIENT = RESTClient(KEYS["MASSIVE_API"]);
 
 def preprocess(data: dict[str, Generator[FuturesAgg]]) -> pd.DataFrame:
-    flat_data: list[dict] = [asdict(e) for ticker in data for e in data[ticker]]
+    flat_data: list[dict] = [e.__dict__ for ticker in data for e in data[ticker]]
     d = {
             key: [d[key] for d in flat_data] 
             for key in flat_data[0].keys()
@@ -59,21 +60,21 @@ Computes the returns for a sequence of candlestick closes.
 
 @Note Returns are the relative change in closing value between observation k and k + 1.
 '''
-def get_returns(close: ArrayLike) -> pd.Series:
+def get_returns(close: pd.Series) -> pd.Series:
     return pd.Series(np.diff(close) / close[:-1]).shift(1)
 
 '''
 Computes relative strength index for an array of price history.
 
 @param prices An array of price history.
-@param n The number of candle sticks to use in the computations.
+@param n The number of candlesticks to use in the computations.
 '''
-def rsi(prices: ArrayLike, n: int) -> np.ndarray:
+def rsi(prices: pd.Series, n: int) -> np.ndarray:
     ret: np.ndarray = np.full(len(prices), np.nan)
-    diff: np.ndarray[np.int] = np.diff(prices)
+    diff: np.ndarray = np.diff(prices)
 
     for i in range(n, len(prices)):
-        window: np.ndarray[np.int] = diff[i - n:i]
+        window: np.ndarray = diff[i - n:i]
 
         avg_gain: float = sum(window[window > 0]) / n
         avg_loss: float = -sum(window[window < 0]) / n 
@@ -99,17 +100,27 @@ def vwap():
 
 def main() -> None: 
 
-    # parser = argparse.ArgumentParser()
     if not Path("data").exists():
         os.mkdir("data")
 
+    pq: pd.DataFrame | None = None
+
     # Retrieve stored data.
     if (Path("Data/data.parquet").exists()):
-        pq: pd.Dataframe = pd.read_parquet("data/data.parquet")
+        pq = pd.read_parquet("data/data.parquet")
+
+    massive_parameters = {
+            "limit": Limit(100), 
+            "sort": "window_start.asc", 
+            "resolution": "15min",
+    }
+
+    next_window_start: int | None = pq['window_start'].iloc[-1] + 1 if pq is not None else None
+    if (next_window_start): 
+        massive_parameters["window_start"] = next_window_start
 
     # Fetch new data.
-    next_window_start: int | None = pq['window_start'].iloc[-1] + 1 if pq is not None else None
-    data: dict[str , Generator[FuturesAgg]] = fetch_data(MASSIVE_CLIENT, TICKERS, Limit(100), next_window_start)
+    data: dict[str , Generator[FuturesAgg]] = fetch_data(MASSIVE_CLIENT, TICKERS, massive_parameters)
 
     df: pd.DataFrame = preprocess(data)
     print(df.head(20))
