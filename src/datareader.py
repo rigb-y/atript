@@ -145,7 +145,7 @@ def fetch_lookback(period: str, depth: int, massive_parameters: MassiveParameter
     params = copy(massive_parameters)
     current_date = date.today()
 
-    past_date = current_date - relativedelta(**{period: depth}) # type: ignore
+    past_date = current_date - relativedelta(**{period: depth}) # type: ignore[arg-type]
 
     params['window_start_gte'] = past_date.isoformat()
     params['window_start_lte'] = current_date.isoformat()
@@ -155,7 +155,12 @@ def fetch_lookback(period: str, depth: int, massive_parameters: MassiveParameter
 """
 Fetches OHLC from massive.com between a specifed date range.
 
-@param
+@param begin The date to begin collection.
+@param begin The date to end collection.
+@param massive_parameters parameters to use in the call to the massive api.
+@param client An instance of a massive Restclient.
+
+@return A generator yielding OHLC data.
 """
 def fetch_range(begin: str, end: str, massive_parameters: MassiveParameters, massive_client) -> Generator[FuturesAgg | bytes]:
     params: MassiveParameters = copy(massive_parameters)
@@ -165,7 +170,12 @@ def fetch_range(begin: str, end: str, massive_parameters: MassiveParameters, mas
     return fetch_data(massive_client, params)
 
 """
+Fetches the latest (not present on disk) OHLC from massive.com.
 
+@param massive_parameters parameters to use in the call to the massive api.
+@param client An instance of a massive Restclient.
+
+@return A generator yielding OHLC data.
 """
 def fetch_latest(massive_parameters: MassiveParameters, massive_client) -> Generator[FuturesAgg | bytes] | None:
     params = copy(massive_parameters)
@@ -186,5 +196,4 @@ def fetch_latest(massive_parameters: MassiveParameters, massive_client) -> Gener
     print(f"Fetching the latest data for {massive_parameters['ticker']} beginning at {dt}")
 
     return fetch_data(massive_client,params)
-
 
