@@ -1,7 +1,9 @@
 #!usr/bin/python3
-from datetime import date
-from datareader import fetch_data, load_last_n, load_prior_data
-from typedefs import Limit
+from datetime import date, datetime, timezone
+from dateutil.relativedelta import relativedelta
+from datareader import fetch_data, load_last_n, load_prior_data, fetch_latest, fetch_lookback, fetch_range
+from typedefs import Limit, MassiveParameters
+from copy import copy
 from pathlib import Path
 from collections import defaultdict
 import pandas as pd
@@ -33,6 +35,7 @@ KEYS: dict[str,str | None] = {
 
 TICKERS: list[str] = ["MESU6"]
 MASSIVE_CLIENT = RESTClient(KEYS["MASSIVE_API"]);
+
 
 
 # The number of prior observations needed to compute the indicators for new data.
@@ -100,69 +103,72 @@ def main() -> None:
         os.mkdir("data")
 
     parser = ArgumentParser()
+    parser.add_argument("-t", "--ticker", type=str, required=True)
+    parser.add_argument("-r", "--resolution", type=str, required=True)
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("latest")
-    subparsers.add_parser("lookback")
-    subparsers.add_parser("latest")
+    latest_parser = subparsers.add_parser("latest")
+    
+    lookback_parser = subparsers.add_parser("lookback")
+    lookback_parser.add_argument("--period", choices=["days","weeks","months","years"], required=True)
+    lookback_parser.add_argument("--depth", required=True, type=int)
 
+    range_parser = subparsers.add_parser("range")
+    range_parser.add_argument("--begin", required=True)
+    range_parser.add_argument("--end", required=True)
 
+    args = parser.parse_args()
 
-    massive_parameters = {
-            "limit": 100, 
-            "sort": "window_start.desc", 
-            "resolution": "15min",
+    ticker = args.ticker
+    if not (Path("data") / ticker).exists():
+        os.mkdir(f"data/{ticker}")
+
+    massive_parameters: MassiveParameters = {
+        # "limit": 100,
+        "sort": "window_start.desc", 
+        "resolution": args.resolution,
+        "ticker": ticker
     }
 
-    for ticker in TICKERS:
+    data: Generator[FuturesAgg | bytes] | None = None
+    match args.command:
+        case "latest":
+            data = fetch_latest(massive_parameters, MASSIVE_CLIENT)
+        case "lookback":
+            data = fetch_lookback(args.period, args.depth, massive_parameters, MASSIVE_CLIENT)
+        case "range":
+            data = fetch_range(args.begin, args.end, massive_parameters, MASSIVE_CLIENT)
 
-        if not (Path("data") / ticker).exists():
-            os.mkdir(f"data/{ticker}")
-
-        additional_parameters: dict = {"ticker": ticker}
-
-        # Load the prior n observations from disk. 
-        prior_n: pd.DataFrame | None = load_last_n(ticker, INDICATOR_LOOKBACK)
-
-        # Get the observations next starting window from the most recent observation.
-        next_window_start: int | None = prior_n['window_start'].iloc[0] + 1 if prior_n is not None else None
-        if (next_window_start is not None): 
-            additional_parameters["window_start"] = next_window_start
-        
-        data: Generator[FuturesAgg | bytes] = fetch_data(MASSIVE_CLIENT, {**massive_parameters, **additional_parameters})
-
-        # Convert data into DataFrame
-        d: defaultdict[str, list] = defaultdict(lambda: [])
-        for futuresagg in data:
-            for k,v in (futuresagg.__dict__).items():
-                d[k].append(v)
-        df: pd.DataFrame = pd.DataFrame(d)
-        
-        # Concatenate new data with the prior n observations needed to calculate indicators.
-        if (prior_n is not None):
-            df = pd.concat([df, prior_n], ignore_index=True)
-
-        df = preprocess(df)
-
-       # Write data to parquete files.
-        dates = pd.Series(df['session_end_date'], dtype="datetime64[ns]")
-        for day, rows in df.groupby(dates.dt.date):
-            prior: pd.DataFrame | None = load_prior_data(ticker, day, day)
-
-            if (prior is not None):
-                rows = pd.concat([rows, prior], ignore_index=True).drop_duplicates(subset="window_start")
-            rows.to_parquet(f"data/{ticker}/{ticker}-{day}.parquet", index=False)
+    if (data is None):
+        return
 
 
+    # Convert data into DataFrame
+    d: defaultdict[str, list] = defaultdict(lambda: [])
+    for futuresagg in data:
+        for k,v in (futuresagg.__dict__).items():
+            d[k].append(v)
+    df: pd.DataFrame = pd.DataFrame(d)
 
-# TODO: add command line arg parser to the fetch script.
-#       latest
-#       period --period <day, month, year> --depth <integer value>
-#       range --begin and --end
-#       ticker <t1 t2 t3 ...>
-#       resolution
-#  
+    print(f"Data fetch was successful. Got {df.shape[0]} observations")
+
+    prior_n = load_last_n(ticker, INDICATOR_LOOKBACK)
+
+    # Concatenate new data with the prior n observations needed to calculate indicators.
+    if (prior_n is not None):
+        df = pd.concat([df, prior_n], ignore_index=True)
+
+    df = preprocess(df)
+
+   # Write data to parquete files.
+    dates = pd.Series(df['session_end_date'], dtype="datetime64[ns]")
+    for day, rows in df.groupby(dates.dt.date):
+        prior: pd.DataFrame | None = load_prior_data(ticker, day, day)
+
+        if (prior is not None):
+            rows = pd.concat([rows, prior], ignore_index=True).drop_duplicates(subset="window_start")
+        rows.to_parquet(f"data/{ticker}/{ticker}-{day}.parquet", index=False)
 
 
 if __name__ == '__main__':

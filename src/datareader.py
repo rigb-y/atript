@@ -1,12 +1,14 @@
 from massive.rest.futures import FuturesAgg
-from typedefs import Limit
+from copy import copy
+from typedefs import Limit, MassiveParameters
 from collections import defaultdict
 import pandas as pd
 from pprint import pprint
 from collections.abc import Generator
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from datetime import date
+from dateutil.relativedelta import relativedelta
 
 '''
 Fetches OHLC data from Massive.com.
@@ -45,7 +47,6 @@ Loads stored data from disk from a range of dates
 def load_prior_data(ticker: str, begin: str | date = "", end: str | date = "") -> pd.DataFrame | None:
     data_dir = Path(f"data/{ticker}")
     if (not data_dir.is_dir()):
-        print(f"No data for {ticker}.")
         return None
 
     if (not begin):
@@ -70,7 +71,6 @@ def load_prior_data(ticker: str, begin: str | date = "", end: str | date = "") -
             if start_date <= date.fromisoformat(f.stem.removeprefix(f"{ticker}-")) <= end_date
     ]
     if (not files):
-        print(f"No data for {ticker}.")
         return None
 
     return pd.concat([pd.read_parquet(file) for file in files], ignore_index=True)
@@ -130,14 +130,61 @@ def load_last_n(ticker: str, n: int) -> pd.DataFrame | None:
     return pd.concat(dfs, ignore_index=True)
 
 
-def make_parquet(data: dict[str,Generator[FuturesAgg]]) -> None:
 
-    d = defaultdict(lambda: [])
+"""
+Fetches OHLC data from massive.com for a specified lookback period.
 
-    for futuresagg in data:
-        for k,v in (futuresagg.__dict__).items():
-            d[k].append(v)
-    df = pd.DataFrame(d)
+@param period Lookback unit accepted by datettime's relativedelta such as 'days', 'weeks', 'months', 'years'.
+@param depth The number of lookback units to fetch.
+@param massive_parameters parameters to use in the call to the massive api.
+@param client An instance of a massive Restclient.
 
-    df.to_parquet("data.csv", index=False)
+@return A generator yielding OHLC data.
+"""
+def fetch_lookback(period: str, depth: int, massive_parameters: MassiveParameters, massive_client) -> Generator[FuturesAgg | bytes]:
+    params = copy(massive_parameters)
+    current_date = date.today()
+
+    past_date = current_date - relativedelta(**{period: depth}) # type: ignore
+
+    params['window_start_gte'] = past_date.isoformat()
+    params['window_start_lte'] = current_date.isoformat()
+    print(f"Fetching the last {depth} {period} of history for {massive_parameters['ticker']}.")
+    return fetch_data(massive_client, params)
+
+"""
+Fetches OHLC from massive.com between a specifed date range.
+
+@param
+"""
+def fetch_range(begin: str, end: str, massive_parameters: MassiveParameters, massive_client) -> Generator[FuturesAgg | bytes]:
+    params: MassiveParameters = copy(massive_parameters)
+    params['window_start_gte'] = begin
+    params['window_start_lte'] = end
+    print(f"Fetching data for {massive_parameters['ticker']} between {begin} and {end}")
+    return fetch_data(massive_client, params)
+
+"""
+
+"""
+def fetch_latest(massive_parameters: MassiveParameters, massive_client) -> Generator[FuturesAgg | bytes] | None:
+    params = copy(massive_parameters)
+    # Load the latest observations from disk. 
+    last_observation: pd.DataFrame | None = load_last_n(massive_parameters["ticker"], 1)
+    if (last_observation is None):
+        print("No history for this ticker. Use --lookback or --range instead")
+        return None
+
+    # Get the observations next starting window from the most recent observation.
+    next_window_start: int = last_observation['window_start'].iloc[0] + 1 
+    params["window_start_gte"] = next_window_start
+
+    dt = datetime.fromtimestamp(
+        next_window_start / 1_000_000_000,
+        tz=timezone.utc,
+    )
+    print(f"Fetching the latest data for {massive_parameters['ticker']} beginning at {dt}")
+
+    return fetch_data(massive_client,params)
+
 
