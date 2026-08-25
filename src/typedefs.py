@@ -9,7 +9,7 @@ class MassiveParameters(TypedDict, total=False):
     limit: int
     sort: str
     resolution: Required[str]
-    window_start: int
+    window_start: int | str
     window_start_gte: str | int
     window_start_lte: str | int
 

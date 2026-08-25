@@ -2,6 +2,7 @@ from massive.rest.futures import FuturesAgg
 from copy import copy
 from typedefs import Limit, MassiveParameters
 from collections import defaultdict
+from collections.abc import Iterator
 import pandas as pd
 from pprint import pprint
 from collections.abc import Generator
@@ -14,7 +15,6 @@ from dateutil.relativedelta import relativedelta
 Fetches OHLC data from Massive.com.
 
 @param client A massive Restclient instance.
-@param tickers A list of futures tickers.
 
 @api-param limit The number of results to return per page.
 @api-param window_start The start time of the candlesticks. A Unix timestamp or YYYY-MM-DD value.
@@ -24,13 +24,8 @@ Fetches OHLC data from Massive.com.
 
 @return  OHLC data for each provided ticker.
 '''
-def fetch_data(client,  fetch_parameters) -> Generator[FuturesAgg | bytes]:
-    if ((window_start := fetch_parameters.get('window_start')) and isinstance(window_start, str)):
-        time: list[int] = [int(t) for t in window_start.strip().split('-')]
-        dt: datetime = datetime(time[0], time[1], time[2])
-        fetch_parameters['window_start'] = int(dt.timestamp())
-
-    return client.list_futures_aggregates(**fetch_parameters)
+def fetch_data(client, fetch_parameters) -> Generator[FuturesAgg | bytes]:
+    return  client.list_futures_aggregates(**fetch_parameters)
 
 """
 Loads stored data from disk from a range of dates
@@ -177,13 +172,13 @@ Fetches the latest (not present on disk) OHLC from massive.com.
 
 @return A generator yielding OHLC data.
 """
-def fetch_latest(massive_parameters: MassiveParameters, massive_client) -> Generator[FuturesAgg | bytes] | None:
+def fetch_latest(massive_parameters: MassiveParameters, massive_client) -> Iterator[FuturesAgg | bytes]:
     params = copy(massive_parameters)
     # Load the latest observations from disk. 
     last_observation: pd.DataFrame | None = load_last_n(massive_parameters["ticker"], 1)
+
     if (last_observation is None):
-        print("No history for this ticker. Use --lookback or --range instead")
-        return None
+        return iter(())
 
     # Get the observations next starting window from the most recent observation.
     next_window_start: int = last_observation['window_start'].iloc[0] + 1 
@@ -196,4 +191,3 @@ def fetch_latest(massive_parameters: MassiveParameters, massive_client) -> Gener
     print(f"Fetching the latest data for {massive_parameters['ticker']} beginning at {dt}")
 
     return fetch_data(massive_client,params)
-
