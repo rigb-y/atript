@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: atript
+Version: 1.0.0
+Requires-Dist: massive
+Requires-Dist: python-dotenv
+Requires-Dist: boto3
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: anthropic
+Requires-Dist: chronos-forecasting>=2.0
+Requires-Dist: pandas[pyarrow]
+Requires-Dist: fastparquet
+Requires-Dist: pydantic

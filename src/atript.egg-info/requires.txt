@@ -1,0 +1,10 @@
+massive
+python-dotenv
+boto3
+pandas
+numpy
+anthropic
+chronos-forecasting>=2.0
+pandas[pyarrow]
+fastparquet
+pydantic

@@ -1,0 +1,2 @@
+[console_scripts]
+atript = futures_pipeline.__main__:main
