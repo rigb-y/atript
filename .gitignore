@@ -1,7 +1,7 @@
 .env
 __pycache__
 symbol_data/
-dumps/
+data/
 *.aux  
 *.fdb_latexmk 
 *.fls

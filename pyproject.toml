@@ -1,0 +1,25 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=77"]
+
+
+[project]
+name = "atript"
+version = "1.0.0"
+dependencies = [
+    "massive",
+    "python-dotenv",
+    "boto3",
+    "pandas",
+    "numpy",
+    "anthropic",
+    "chronos-forecasting>=2.0",
+    "pandas[pyarrow]",
+    "fastparquet",
+    "pydantic",
+]
+[project.scripts]
+atript = "futures_pipeline.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
