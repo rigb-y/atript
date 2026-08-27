@@ -279,8 +279,49 @@
     .\end{align*}
     Every later value uses Wilder's recursive update.
 
+    \pagebreak 
+    \section{Moving averages}
+    \bigbreak \noindent 
+    A moving average is commonly used with time series data to smooth out short-term fluctuations and highlight longer-term trends or cycles
+    \bigbreak \noindent 
+    Given a series of numbers and a fixed subset size, the first element of the moving average is obtained by taking the average of the initial fixed subset of the number series. Then the subset is modified by "shifting forward"; that is, excluding the first number of the series and including the next value in the series
+    \bigbreak \noindent 
+    A moving average is commonly used with time series data to smooth out short-term fluctuations and highlight longer-term trends or cycles - in this case the calculation is sometimes called a time average.
+
+    \pagebreak 
+    \subsection{Simple Moving Average}
+    \bigbreak \noindent 
+    In financial applications a simple moving average (SMA) is the unweighted mean of the previous $k$
+    \begin{align*}
+        \text{SMA}_{k} = \frac{1}{k}\sum_{i = n -k+1}^{n} p_{i}
+    .\end{align*}
+    When calculating the next mean $\text{SMA}_{k, \text{next}}$ with the same sampling width $k$ the range from $n-k+2$ to $n+1$ is considered. A new value $p_{n+1}$ comes into the sum and tho older value $p_{n-k+1}$ drops out. This simplifies the calculations by reusing the previous mean $\text{SMA}_{k,\text{prev}}$.
+    \begin{align*}
+        \text{SMA}_{k,\text{next}} &= \frac{1}{k}\sum_{i=n-k+2}^{n+1}p_{i} \\
+                                   &= \frac{1}{k}\left(p_{n-k+2} + p_{n-k+3} + \cdots + p_{n} + p_{n+1} + \underbrace{p_{n-k+1} -p_{n-k+1}}_{0}\right) \\
+                                   &= \frac{1}{k}\left(p_{n-k+1} + p_{n-k+2} + \cdots + p_{n}\right) - \frac{p_{n-k+1}}{k} + \frac{p_{n+1}}{k} \\
+                                   &= \text{SMA}_{k,\text{prev}} + \frac{1}{k}\left(p_{n+1} -p_{n-k+1}\right)
+    .\end{align*}
+
+    \pagebreak 
+    \subsection{Weighted Moving Average}
+    \bigbreak \noindent 
+    A weighted average is an average that has multiplying factors to give different weights to data at different positions in the sample window.
+    \bigbreak \noindent 
+    In the financial field, and more specifically in the analyses of financial data, a weighted moving average (WMA) has the specific meaning of weights that decrease in arithmetical progression.[5] In an n-day WMA the latest day has weight n, the second latest $n-1$, etc., down to one.
+    \begin{align*}
+        \text{WMA}_{M} &= \frac{np_{M} + (n-1)p_{M-1} + \cdots + 2p_{(M-n)+2} + p_{(M-n)+1}}{n+(n-1) + \cdots + 2 + 1}
+    .\end{align*}
+
+
+    \pagebreak
+    \subsection{Exponential Moving Average}
+    \bigbreak \noindent 
+
+
     
 
+    \pagebreak \noindent
     \section{VWAP (Volume Weighted Average Price)}
     The average price a stock has traded at throughout the day weighted by volume.
     Instead of treating each price the same, VWAP assigns more weight to prices where trading activity was heavier.

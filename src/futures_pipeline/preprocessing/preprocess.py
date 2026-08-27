@@ -53,6 +53,49 @@ def rsi(prices: pd.Series, n: int) -> np.ndarray:
         ret[i] = rsi
     return ret
 
+'''
+Computes the p period simple moving average
+
+@param prices An array of price history.
+@param p Period length
+
+@note 
+    SMA_M: M \\to M-p+1 = 1/p \\sum_{i=m-p+1}^M x_i
+    SMA_{M+1}: M+1 \\to m-p+2 = SMA_{M} + 1/p(x_{M+1} - x_{M-p+1})
+'''
+def sma(prices: pd.Series, p: int):
+    if (p <= 0 or p > len(prices)): return
+
+    n: int = len(prices) - 1
+    ret: np.ndarray = np.full(n+1, np.nan)
+
+    k: int
+    price_sum: np.float64
+    initial: np.float64
+    
+    k, price_sum, initial = 0, np.float64(), np.float64()
+
+    for i in range(n, n-p, -1):
+        price_sum += prices.iloc[i]
+
+    initial = price_sum / p
+    ret[k] = initial
+
+    k+=1
+    tail: int = n
+    for i in range(n-p+1, 0, -1):
+        ret[k] = ret[k-1] + 1/p * (prices.iloc[i] - prices.iloc[tail])
+        tail-=1
+        k+=1
+
+    return ret
+
+def wma():
+    ...
+
+def ema(prices: pd.Series): 
+    ...
+
 def bollinger_bands():
     ...
 
