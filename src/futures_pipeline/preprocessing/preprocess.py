@@ -69,23 +69,21 @@ def sma(prices: pd.Series, p: int):
     n: int = len(prices) - 1
     ret: np.ndarray = np.full(n+1, np.nan)
 
-    k: int
-    price_sum: np.float64
-    initial: np.float64
+    k: int = 0
+    price_sum: np.float64 = np.float64()
+    initial: np.float64 = np.float64()
     
-    k, price_sum, initial = 0, np.float64(), np.float64()
-
     for i in range(n, n-p, -1):
         price_sum += prices.iloc[i]
 
     initial = price_sum / p
     ret[k] = initial
+    tail: int = n
 
     k+=1
-    tail: int = n
     for i in range(n-p+1, 0, -1):
         ret[k] = ret[k-1] + 1/p * (prices.iloc[i] - prices.iloc[tail])
-        tail-=1
+        tail-=1 
         k+=1
 
     return ret
