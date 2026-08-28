@@ -3,16 +3,36 @@ from .massive_client import create_massive_client
 from .cli import create_parser
 from argparse import ArgumentParser, Namespace
 from massive import RESTClient
+from .typedefs import MassiveParameters
+from .fetch import fetch
+from .preprocessing.preprocess import preprocess
 
 def main():
     settings: Settings = load_settings()
-    massive_client: RESTClient = create_massive_client(settings.massive_api_key)
-    
     parser: ArgumentParser = create_parser()
+
     args: Namespace = parser.parse_args()
+    if args.ticker is None:
+        parser.error("-t/--ticker is required")
 
-    print(args)
 
+    match args.command:
+        case "fetch":
+            massive_parameters: MassiveParameters = {
+                    # "limit": 100,
+                    "sort": "window_start.desc",
+                    "resolution": (
+                        args.resolution
+                        if getattr(args, "resolution")
+                        else settings.default_resolution
+                        ),
+                    "ticker": args.ticker,
+                    }
+            fetch(massive_parameters, create_massive_client(settings.massive_api_key), args)
+        case "preprocess":
+            preprocess(args.ticker)
+        case _:
+            return
     
 if __name__ == "__main__":
     main()

@@ -52,10 +52,9 @@ Loads stored data from disk from a range of dates
       If begin is omited, the function will return all data from 
       the least recent trading day to specified end date.
 """
-def load_prior_data(
+def load_prior_data(data_dir: Path,
     ticker: str, begin: str = "", end: str = ""
 ) -> pd.DataFrame | None:
-    data_dir = Path(f"data/{ticker}")
     if not data_dir.is_dir():
         return None
 

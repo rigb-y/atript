@@ -5,8 +5,8 @@ from argparse import _SubParsersAction
 def create_parser() -> ArgumentParser:
 
     shared = ArgumentParser(add_help=False)
-    shared.add_argument("-t", "--ticker", type=str, required=True)
-    shared.add_argument("-r", "--resolution", type=str, required=True)
+    shared.add_argument("-t", "--ticker", type=str)
+    shared.add_argument("-r", "--resolution", type=str)
 
     parser = ArgumentParser(parents=[shared])
 
@@ -43,3 +43,9 @@ def create_preprocess_parser(subparsers: _SubParsersAction, common_args: Argumen
 
     preproc_parser: ArgumentParser = subparsers.add_parser("preprocess", parents=[common_args])
     return preproc_parser
+
+
+def check_ticker():
+    ...
+def check_resolution():
+    ...

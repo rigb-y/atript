@@ -1,46 +1,83 @@
 import pandas as pd
 import numpy as np
-from  import create_preprocess_parser
+from ..datareader import load_prior_data, load_last_n
+from pathlib import Path
+from ..config import PROCESSED_DATA_DIR, RAW_DATA_DIR, load_settings, Settings
 
-def handle_missing(data: pd.DataFrame) -> pd.DataFrame:
-    print(data.isna().any())
-    ...
-def handle_duplicates(data: pd.DataFrame) -> pd.DataFrame:
-    ...
 
-def preprocess(data: pd.DataFrame) -> pd.DataFrame:
+def preprocess(ticker: str) -> None:
+    processed_path: Path = Path(PROCESSED_DATA_DIR) / ticker
+    raw_path: Path = Path(RAW_DATA_DIR) / ticker
+    settings: Settings = load_settings()
 
-    data['returns'] = get_returns(data['close'])
-    data['rsi'] = rsi(data['close'], 14)
+    processed_path.mkdir(exist_ok=True, parents=True)
 
-    data = data.drop(['settlement_price', 'open', 'high', 'low','close'], axis=1)
-    return data
+    data: pd.DataFrame | None = load_prior_data(raw_path, ticker)
 
-'''
+    if data is None:
+        print(f"No data available for {ticker}.")
+        return
+
+    print(f"Processing {data.shape[0]} records for {ticker}.")
+
+    prior_n: pd.DataFrame | None = load_last_n(raw_path, ticker, settings.indicator_lookback)
+
+    # Concatenate new data with the prior n observations needed to calculate indicators.
+    if (prior_n is not None):
+        data = pd.concat([data, prior_n], ignore_index=True)
+
+    data = (
+        data.drop_duplicates(subset=["window_start"])
+        .sort_values("window_start", ascending=False, kind="stable")
+        .dropna()
+        .reset_index(drop=True)
+    )
+
+    data["returns"] = get_returns(data["close"])
+    data["rsi"] = rsi(data["close"], 14)
+
+    data = data.drop(["open", "high", "low", "close"], axis=1)
+
+    # Write data to parquete files.
+    dates = pd.Series(data["session_end_date"], dtype="datetime64[ns]")
+    for day, rows in data.groupby(dates.dt.date):
+        path: str = f"{PROCESSED_DATA_DIR}/{ticker}/{ticker}-{day}.parquet"
+        prior: pd.DataFrame | None = load_prior_data(processed_path, ticker, day, day)
+        if prior is not None:
+            rows = pd.concat([rows, prior], ignore_index=True).drop_duplicates(
+                subset="window_start"
+            )
+        rows = rows.sort_values(
+            "window_start", ascending=False, kind="stable"
+        ).reset_index(drop=True)
+        rows.to_parquet(path, index=False)
+        print(f"Wrote {path} ({rows.shape[0]:,} rows)")
+
+"""
 Computes the returns for a sequence of candlestick closes.
 @param close An array of closing values for candlesticks.
 
 @Note Returns are the relative change in closing value between observation k and k + 1.
 @Note Assumes close is ordered by most recent observation to least recent observation.
-'''
+"""
 def get_returns(close: pd.Series) -> pd.Series:
-    return pd.Series(-np.diff(close) / close[1:]).shift(1)
+    return pd.Series(-np.diff(close) / close.iloc[1:]).reset_index(drop=True)
 
-'''
+"""
 Computes relative strength index for an array of price history.
 
 @param prices An array of price history.
 @param n The number of candlesticks to use in the computations.
-'''
+"""
 def rsi(prices: pd.Series, n: int) -> np.ndarray:
     ret: np.ndarray = np.full(len(prices), np.nan)
     diff: np.ndarray = -np.diff(prices)
 
     for i in range(len(prices) - n):
-        window: np.ndarray = diff[i:i + n]
+        window: np.ndarray = diff[i : i + n]
 
         avg_gain: float = sum(window[window > 0]) / n
-        avg_loss: float = -sum(window[window < 0]) / n 
+        avg_loss: float = -sum(window[window < 0]) / n
 
         if avg_loss == 0 and avg_gain == 0:
             rsi = 50.0
@@ -52,6 +89,7 @@ def rsi(prices: pd.Series, n: int) -> np.ndarray:
 
         ret[i] = rsi
     return ret
+
 
 '''
 Computes the p period simple moving average
@@ -95,18 +133,8 @@ def ema(prices: pd.Series):
     ...
 
 def bollinger_bands():
+
     ...
 
-def msi():
-    ...
-def vwap():
-    ...
-
-def main():
-    parser = create_preprocess_parser()
-
-    args = parser.parser_args()
-
-if __name__ == "__main__":
-    main()
-
+def msi(): ...
+def vwap(): ...
