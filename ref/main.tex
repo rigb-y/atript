@@ -4,8 +4,8 @@
 \usepackage{
   amsmath, amsthm, amssymb, mathtools, dsfont, units,   % Math typesetting
   graphicx, wrapfig, subfig, float,                     % Figures and graphics formatting
-  listings, color, inconsolata, pythonhighlight,        % Code formatting
-  fancyhdr, sectsty, hyperref, enumerate, enumitem, tabularx, booktabs}   	% Headers/footers, section fonts, links, lists
+  listings, xcolor, inconsolata, pythonhighlight,        % Code formatting
+  fancyhdr, wasysym, sectsty, hyperref, enumerate, enumitem, tabularx, booktabs}   	% Headers/footers, section fonts, links, lists
 
 % Set page margins
 \usepackage[left=1.5in, right=1.5in, top=1.2in, bottom=1in, headsep=.25in]{geometry}
@@ -19,7 +19,6 @@
 
 % Allow multi-line equations to break onto the next page
 \allowdisplaybreaks
-
 
 % Set font sizes for section and subsection titles
 \sectionfont{\fontsize{13}{15}\selectfont}
@@ -58,13 +57,13 @@
   framexleftmargin=1.6em,                               % Extend frame left margin to include line numbers
   breaklines=true,                                      % Wrap long lines of code
   postbreak=\mbox{\textcolor{greenText}{$\hookrightarrow$}\space} % Mark wrapped lines with an arrow
-=======
+}
 % Page geometry
 \geometry{
   left=1.5in,
   right=1.5in,
   top=1in,
-  bottom=1in
+  bottom=1i
 }
 
 % Change the title
@@ -325,10 +324,35 @@
     \section{VWAP (Volume Weighted Average Price)}
     The average price a stock has traded at throughout the day weighted by volume.
     Instead of treating each price the same, VWAP assigns more weight to prices where trading activity was heavier.
-
-    
-
-
+    \section{Bollinger Bands}
+    Bollinger Bands are a type of statistical chart characterizing the prices and volatility over time.
+    \bigbreak \noindent
+    Bollinger Bands consist of an $N$-period moving average (MA), an upper band at $K$ times an 
+    $N$-period standard deviation above the moving average (MA + $K\sigma$), and a lower band at $K$ times and 
+    $N$-period standard deviation below the moving average (MA - $K\sigma)$.
+    \bigbreak \noindent
+    $N$ and $K$ are input parameters chosen independently by the user. Typical values for $N$ and $K$ are 20 days and 2, respectively. The default choice for the moving average is a simple moving average. Exponential is a common second choice.
+    \bigbreak \noindent
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{ bb.png }
+    \end{figure}
+    \subsection{Purpose}
+    Bollinger bands gives us two types of signals, i.e. volatility and buy/sell.
+    \bigbreak \noindent
+    The purpose of Bollinger Bands is to provide a relative definition of high and low prices of a market. By definition, prices are high at the upper band and low at the lower band.
+    \bigbreak \noindent
+    The bands widen when a stock's price becomes more volatile and contract when it is more stable. Many traders see stocks as overbought as their price nears the upper band and oversold as they approach the lower band, signaling an opportune time to trade.
+    \bigbreak \noindent
+    Bollinger Bands are a secondary indicator that is best used to confirm other analysis methods such as RSI and moving average convergence divergence (MACD). In particular, the use of oscillator-like Bollinger Bands will often be couped with a non-oscillator indicator-like chart pattern or a trendline. If these indicators confirm the recommendation of the Bollinger Bands, the trader will have great conviction that the bands are predicting correct price action in relation to market volatility.
+    \subsection{Indicators derived from Bollinger Bands}
+    \subsubsection{Percent b}
+    \%b (pronoused ``percent b'') is derived from the forumla for \textbf{stochastics} \ref{sec:stochastics} and shows where price is in relation to the bands. \%b equals 1 at the upper band and 0 at the lower band. Writing \textit{upperBB} for the upper Bollinger Band, \textit{lowerBB} for the lower Bollinger Band, and \textbf{last} for the last (price) value:
+    $$ \%b = (\text{last} - \text{lowerBB}) / (\text{upperBB} - \text{lowerBB})$$
+    \subsubsection{Bandwith}
+    \textit{Bandwidth} tells how wide the Bollinger Bands are on a normalized basis. Writing the same symbols as before, and \textit{middleBB} for the moving average:
+    $$ \text{Bandwidth} = (\text{upperBB} - \text{lowerBB}) / \text{middleBB}$$
+    \section{Stochastics}\label{sec:stochastics}
 
 
 \end{document}

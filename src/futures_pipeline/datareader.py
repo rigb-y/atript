@@ -1,7 +1,7 @@
 from massive.rest.futures import FuturesAgg
 from massive import RESTClient
 from copy import copy
-from typedefs import MassiveParameters
+from .typedefs import MassiveParameters
 from collections.abc import Iterator
 import pandas as pd
 from datetime import datetime
@@ -93,9 +93,11 @@ Loads a tickers most recent trading day from disk.
 
 @param ticker The ticker to use.
 """
-def load_latest_day(ticker) -> pd.DataFrame | None:
-    data_dir = Path(f"data/{ticker}")
+def load_latest_day(data_dir: Path | str, ticker: str) -> pd.DataFrame | None:
+    if not isinstance(data_dir, Path):
+        data_dir = Path(data_dir)
     if not data_dir.is_dir():
+        print(f"No such directory for {ticker} exists.")
         return None
 
     target_file: Path | None = max(
