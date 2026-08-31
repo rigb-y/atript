@@ -87,7 +87,11 @@ def sma(prices: pd.Series, p: int = 20) -> np.ndarray:
     return sma
 
 """
+Computes the p period weighted moving average.
+The computation is simply a weighted mean
 
+@param prices An array of price history.
+@param p Period length.
 """
 def wma(prices: pd.Series, period: int = 14) -> np.ndarray:
     if (period <= 0):
@@ -107,9 +111,31 @@ def wma(prices: pd.Series, period: int = 14) -> np.ndarray:
     return W
 
 
-def ema(prices: pd.Series): ...
+"""
+Computes the p period exponential moving average.
 
+@param prices An array of price history.
+@param p Period length.
 
+@note EMA_t = {
+    p_1 if t = 1,
+    \\alpha p_t + (1-\\alpha)EMA_{t-1} o.w
+}
+
+More info can be found in the repos reference doc.
+"""
+def ema(prices: pd.Series, period: int = 14) -> np.ndarray:
+    if (len(prices) == 0): return np.array([])
+
+    n: int = len(prices)-1
+    alpha: float = 2 / (period + 1)
+    ret: np.ndarray = np.full(n+1, np.nan)
+
+    ret[n] = prices.iloc(n)
+    for i in range(n-1, -1, -1): 
+        ret[i] = alpha * prices.iloc[i] + (1-alpha) * ret[i+1]
+
+    return ret
 """
 Calcuates Bollinger Band Percent B (%B).
 

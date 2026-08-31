@@ -327,7 +327,58 @@
             \alpha p_{t} + (1-\alpha)\text{EMA}_{t-1} & \text{otherwise}
         \end{cases}
     \end{align*}
-    where $\alpha \in (0,1]$.
+    where $\alpha \in (0,1)$. Consider $t = 4$. Then,
+    \begin{align*}
+        \text{EMA}_{4} = \alpha p_{4} + (1-\alpha)\left(\alpha p_{3} + (1-\alpha) \left(p_{2} + (1-\alpha)p_{1}\right)\right)
+    .\end{align*}
+    Expanding yields
+    \begin{align*}
+        \text{EMA}_{4} &= \alpha p_{4} + (1-\alpha)\left(\alpha p_{3} + \alpha ( 1-\alpha)p_{2} + (1-\alpha)^{2} p_{1}\right) \\
+                       &= \alpha p_{4} + \alpha (1-\alpha)p_{3} + \alpha (1-\alpha)^{2}p_{2} + (1-\alpha)^{3}p_{1} \\
+                       &= \alpha\left[p_{4} + (1-\alpha)p_{3} + (1-\alpha)^{2}p_{2}\right] + (1-\alpha)^{3}p_{1}
+    .\end{align*}
+    This should be convincing enough that in general, we have
+    \begin{align*}
+        \text{EMA}_{t} &= \alpha\sum_{i=2}^{t}(1-\alpha)^{t-i}p_{i} + (1-\alpha)p_{1} \\
+         &\approx \alpha \sum_{i=1}^{t}(1-\alpha)^{t-i}p_{i}
+    .\end{align*}
+    Notice that since $ 0 < \alpha < 1$, we indeed have exponential decay. Let's now consider the coefficients of the data points
+    \begin{align*}
+        \sum_{i=1}^{t}(1-\alpha)^{t-i}
+    .\end{align*}
+    We can instead reverse the order of the sum, and say that
+    \begin{align*}
+        \sum_{i=1}^{t}(1-\alpha)^{t-i} = \sum_{i=1}^{t}(1-\alpha)^{i-1}
+    .\end{align*}
+    Now, you may recognize this as a geometric series, since $\left\lvert 1-\alpha \right\rvert < 1$. Recall that
+    \begin{align*}
+        \sum_{i=1}^{n}ar^{i-1} = \frac{a(1-r^{n})}{1-r}, \quad r\ne 1
+    .\end{align*}
+    Thus,
+    \begin{align*}
+        \sum_{i=1}^{t}(1-\alpha)^{i-1} = \frac{1-(1-\alpha)^{t}}{1-(1-\alpha)} = \frac{1-(1-\alpha)^{t}}{\alpha}
+    .\end{align*}
+    As $t \to \infty$, 
+    \begin{align*}
+        \frac{1-(1-\alpha)^{t}}{\alpha} \to \frac{1}{a}
+    .\end{align*}
+    Since 
+    \begin{align*}
+        a = \frac{1}{\frac{1}{\alpha}}
+    ,\end{align*}
+    We can say that
+    \begin{align*}
+        \alpha \sum_{i=1}^{t}(1-\alpha)^{t-i}p_{i} =  \frac{1}{\frac{1}{\alpha}} \sum_{i=1}^{t}(1-\alpha)^{t-i}p_{i}
+    .\end{align*}
+    Hence, we have a weighted average whose weights are exponentially decayed.
+    \bigbreak \noindent 
+    Alpha ($\alpha$) is chosen either by using a standard time-period formula or by optimizing it for specific data stability and responsiveness
+    \bigbreak \noindent 
+    In finance and technical analysis, alpha is often derived directly from a chosen time window length (N) using the formula:
+    \begin{align*}
+        \alpha = \frac{2}{N+1}
+    .\end{align*}
+
 
 
 
