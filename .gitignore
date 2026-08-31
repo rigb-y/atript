@@ -8,5 +8,6 @@ data/
 *.synctex.gz 
 *.toc
 *.log
+*.out
 minted_main
 SKILL.MD
