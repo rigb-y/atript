@@ -86,7 +86,6 @@ def sma(prices: pd.Series, p: int = 20) -> np.ndarray:
 
     return sma
 
-
 """
 
 """
@@ -127,6 +126,7 @@ def percent_b(prices: pd.Series, period: int = 20, std: int = 2) -> pd.Series:
     rolling_mean: np.ndarray = np.convolve(
         prices, np.ones(period) / period, mode="valid"
     )
+
     rolling_std: np.ndarray = np.std(
         [prices.iloc[i : i + period] for i in range(len(prices) - period + 1)],
         axis=1,

@@ -316,9 +316,24 @@
     \pagebreak
     \subsection{Exponential Moving Average}
     \bigbreak \noindent 
+    Exponential moving average (EMA) computes the weighted mean of all the previous data points and the weights decay exponentially. Concretely, given a sequence of data points
+    \begin{align*}
+        p_{1}, p_{2}, \cdots, p_{t}
+    ,\end{align*}
+    the EMA at data point $t$, denoted as $\text{EMA}_{t}$ can be calculated with
+    \begin{align*}
+        \text{EMA}_{t} = \begin{cases}
+            p_{1} &\text{if } t = 1 \\
+            \alpha p_{t} + (1-\alpha)\text{EMA}_{t-1} & \text{otherwise}
+        \end{cases}
+    \end{align*}
+    where $\alpha \in (0,1]$.
 
 
-    
+
+
+
+
 
     \pagebreak \noindent
     \section{VWAP (Volume Weighted Average Price)}
@@ -349,7 +364,7 @@
     \subsubsection{Percent b}
     \%b (pronoused ``percent b'') is derived from the forumla for \textbf{stochastics} \ref{sec:stochastics} and shows where price is in relation to the bands. \%b equals 1 at the upper band and 0 at the lower band. Writing \textit{upperBB} for the upper Bollinger Band, \textit{lowerBB} for the lower Bollinger Band, and \textbf{last} for the last (price) value:
     $$ \%b = (\text{last} - \text{lowerBB}) / (\text{upperBB} - \text{lowerBB})$$
-    \subsubsection{Bandwith}
+    \subsubsection{Bandwidth}
     \textit{Bandwidth} tells how wide the Bollinger Bands are on a normalized basis. Writing the same symbols as before, and \textit{middleBB} for the moving average:
     $$ \text{Bandwidth} = (\text{upperBB} - \text{lowerBB}) / \text{middleBB}$$
     \section{Stochastics}\label{sec:stochastics}
