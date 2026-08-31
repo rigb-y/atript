@@ -123,14 +123,14 @@ Computes the p period exponential moving average.
 
 More info can be found in the repos reference doc.
 """
-def ema(prices: pd.Series, period: int = 14) -> np.ndarray:
+def ema(prices: pd.Series, period: int = 15) -> np.ndarray:
     if (len(prices) == 0): return np.array([])
 
     n: int = len(prices)-1
-    alpha: float = 2 / (period + 1)
+    alpha: np.float128 = np.float128(2) / np.float128((period + 1))
     ret: np.ndarray = np.full(n+1, np.nan)
 
-    ret[n] = prices.iloc(n)
+    ret[n] = prices.iloc[n]
     for i in range(n-1, -1, -1): 
         ret[i] = alpha * prices.iloc[i] + (1-alpha) * ret[i+1]
 
