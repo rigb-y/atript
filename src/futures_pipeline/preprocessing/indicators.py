@@ -22,8 +22,7 @@ def smoothed_rsi(prices: pd.Series, period: int = 14) -> np.ndarray:
     if (period <= 0):
         raise ValueError("Period must be greater than zero.")
 
-    if (len(prices) <= period):
-        return rsi
+    if (len(prices) <= period): return rsi
 
     diff = -np.diff(prices)
 
@@ -163,5 +162,32 @@ def percent_b(prices: pd.Series, period: int = 20, std: int = 2) -> pd.Series:
     ret =  pd.Series((prices.iloc[:len(prices) - period + 1] - lower_band) / (upper_band - lower_band))
     return ret
 
-def msi(): ...
-def vwap(): ...
+def msi(): 
+    ...
+"""
+Calculates VWAP.
+
+@param
+
+@note 
+
+"""
+def vwap(df: pd.DataFrame) -> pd.Series: 
+    price = (df['high'] + df['low'] + df['close']) / 3
+
+    df['close'] = price
+    def calcuate_vwap(group: pd.DataFrame):
+        vwap = (group['close'] * group['volume']).cumsum() / group['volume'].cumsum()
+        group['VWAP'] = vwap
+        return group
+
+    df = df.sort_values("window_start")
+    vwap_df: pd.DataFrame = df.groupby('session_end_date').apply(calcuate_vwap, include_groups=False) # type:ignore
+
+    vwap_df.sort_values('window_start', ascending=False)
+    return vwap_df['VWAP'].reset_index(drop=True)
+
+def alpha():
+    ...
+def beta():
+    ...

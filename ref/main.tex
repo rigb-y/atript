@@ -390,6 +390,16 @@
     \section{VWAP (Volume Weighted Average Price)}
     The average price a stock has traded at throughout the day weighted by volume.
     Instead of treating each price the same, VWAP assigns more weight to prices where trading activity was heavier.
+    \subsection{Calculation}
+    VWAP is calculated as the cumulative value traded divided by the cumulative volume traded over the chosen window:
+    $$ P_{\text{VWAP}} = \frac{\sum_{j}P_jQ_j}{\sum_{j}Q_j}$$
+    where $P_j$ is the price of trade $j$, $Q_j$ is its quantity, and the sum runs over each individual trade in the defined period.
+    \bigbreak \noindent
+    The indicator is usually computed for a single trading day but can in principle be measured between any two points in time.
+    \subsection{Purpose}
+    VWAP can be used by traders as an intraday reference level. Prices trading about the day's VWAP are commonly interpreted as bullish and prices below it as bearish, in a manner analogous to a moving average. Some traders use crossing of price through the VWAP line as entry signals, initiating long positions on upward crossings and short positions on downward crossings.
+    \bigbreak \noindent
+    Because VWAP resets at the start of each session, it is mainly used for intraday rather than multi-day analysis.
     \section{Bollinger Bands}
     Bollinger Bands are a type of statistical chart characterizing the prices and volatility over time.
     \bigbreak \noindent

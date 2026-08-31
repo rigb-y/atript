@@ -2,7 +2,7 @@ import pandas as pd
 from ..datareader import load_prior_data
 from pathlib import Path
 from ..config import PROCESSED_DATA_DIR, RAW_DATA_DIR, load_settings, Settings
-from .indicators import smoothed_rsi, percent_b, get_returns, sma, ema, msi, vwap, wma
+from .indicators import smoothed_rsi, percent_b, get_returns, sma, ema, msi, vwap, wma, vwap
 
 
 def preprocess(ticker: str) -> None:
@@ -41,7 +41,8 @@ def preprocess(ticker: str) -> None:
     data["percent_b"] = percent_b(data["close"])
     data["sma"] = sma(data["close"])
     data["wma"] = wma(data["close"])
-    # print(data)
+    data["VWAP"]= vwap(data)
+    print(data)
 
     # data = data.drop(["open", "high", "low", "close"], axis=1)
     # print(data)
