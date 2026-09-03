@@ -12,7 +12,8 @@ df = load_latest_day(data_path, "MESU6")
 if (df is None):
     exit()
 
-print(df)
+print(df.groupby("ticker").cumcount())
+
 # prices: pd.Series = df['close']
 # pct_b = percent_b(prices)
 # print(pct_b)

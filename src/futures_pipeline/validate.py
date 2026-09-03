@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 class FuturesOHLC(BaseModel):
     model_config = ConfigDict(frozen=True, extra="ignore")
 
+    ticker: str = Field(min_length=1)
     open: float = Field(allow_inf_nan=False)
     high: float = Field(allow_inf_nan=False)
     low: float = Field(allow_inf_nan=False)
@@ -43,7 +44,7 @@ class FuturesOHLC(BaseModel):
         return datetime.fromtimestamp(
             window_start / 1_000_000_000, tz=timezone.utc
         ).isoformat()
-
+    
 
 def validate_data(observations: Iterable[FuturesAgg | bytes]) -> list[FuturesOHLC]:
     validated: list[FuturesOHLC] = []

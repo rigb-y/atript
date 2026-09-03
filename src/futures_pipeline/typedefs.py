@@ -12,4 +12,3 @@ class MassiveParameters(TypedDict, total=False):
     window_start:  str
     window_start_gte: str
     window_start_lte: str
-

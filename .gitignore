@@ -11,3 +11,4 @@ data/
 *.out
 minted_main
 SKILL.MD
+models/
