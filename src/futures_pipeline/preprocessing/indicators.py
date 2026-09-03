@@ -7,8 +7,9 @@ Computes the returns for a sequence of candlestick closes.
 @Note Returns are the relative change in closing value between observation k and k + 1.
 @Note Assumes close is ordered by most recent observation to least recent observation.
 """
-def get_returns(close: pd.Series) -> pd.Series: 
-    return pd.Series(-np.diff(close) / close.iloc[1:]).reset_index(drop=True)
+def get_returns(close: pd.Series) -> pd.Series:
+    return pd.Series(-np.diff(close) / close.iloc[:-1]).reset_index(drop=True)
+
 
 """
 Computes relative strength index w/ wilders smoothing for an array of price history.
@@ -173,19 +174,22 @@ Calculates VWAP.
 
 """
 def vwap(df: pd.DataFrame) -> pd.Series: 
-    price = (df['high'] + df['low'] + df['close']) / 3
+    data = df.copy()
+    data['price'] = (df['high'] + df['low'] + df['close']) / 3
 
-    df['close'] = price
-    def calcuate_vwap(group: pd.DataFrame):
-        vwap = (group['close'] * group['volume']).cumsum() / group['volume'].cumsum()
+    def calcuate_vwap(group: pd.DataFrame) -> pd.DataFrame:
+        vwap = (group['price'] * group['volume']).cumsum() / group['volume'].cumsum()
         group['VWAP'] = vwap
         return group
 
-    df = df.sort_values("window_start")
-    vwap_df: pd.DataFrame = df.groupby('session_end_date').apply(calcuate_vwap, include_groups=False) # type:ignore
+    data = data.sort_values("window_start")
 
-    vwap_df.sort_values('window_start', ascending=False)
+    vwap_df: pd.DataFrame = data.groupby('session_end_date').apply(calcuate_vwap, include_groups=False) # type:ignore
+
+    vwap_df = vwap_df.sort_values('window_start', ascending=False)
     return vwap_df['VWAP'].reset_index(drop=True)
+
+
 
 def alpha():
     ...
