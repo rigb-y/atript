@@ -4,7 +4,7 @@ from copy import copy
 from .typedefs import MassiveParameters
 from collections.abc import Iterator
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from datetime import date
 from dateutil.relativedelta import relativedelta
@@ -159,12 +159,13 @@ def fetch_lookback(
     period: str, depth: int, massive_parameters: MassiveParameters, massive_client
 ) -> Iterator[FuturesAgg]:
     params = copy(massive_parameters)
-    current_date: date = date.today()
 
-    past_date: date = current_date - relativedelta(**{period: depth})  # type: ignore[arg-type]
+    current_end_date: date = date.today() + timedelta(days=1)
+
+    past_date: date = current_end_date - relativedelta(**{period: depth})  # type: ignore[arg-type]
 
     params["window_start_gte"] = past_date.isoformat()
-    params["window_start_lte"] = current_date.isoformat()
+    params["window_start_lte"] = current_end_date.isoformat()
     print(
         f"Fetching the last {depth} {period} of history for {massive_parameters['ticker']}."
     )
@@ -175,7 +176,7 @@ def fetch_lookback(
 Fetches OHLC from massive.com between a specifed date range.
 
 @param begin The date to begin collection.
-@param begin The date to end collection.
+@param end The date to end collection.
 @param massive_parameters parameters to use in the call to the massive api.
 @param client An instance of a massive Restclient.
 
@@ -184,12 +185,13 @@ Fetches OHLC from massive.com between a specifed date range.
 def fetch_range(
     begin: str, end: str, massive_parameters: MassiveParameters, massive_client
 ) -> Iterator[FuturesAgg]:
+
     params: MassiveParameters = copy(massive_parameters)
-    params["window_start_gte"] = begin
-    params["window_start_lte"] = end
+    params["window_start_gte"] = begin 
+    params["window_start_lte"] = (date.fromisoformat(end) + timedelta(days=1)).isoformat()
+
     print(f"Fetching data for {massive_parameters['ticker']} between {begin} and {end}")
     return fetch_data(massive_client, params)
-
 
 """
 Fetches the latest (not present on disk) OHLC from massive.com.
