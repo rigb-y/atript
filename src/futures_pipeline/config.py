@@ -17,8 +17,8 @@ class Settings:
     hf_token: str
     default_resolution: str = "15min"
     request_limit: int  = 100
-    # The number of prior observations needed to compute the indicators for new data.
-    indicator_lookback: int = 14
+    default_target: str = "returns"
+    default_pred_length: int = 24
 
 def load_settings() -> Settings:
     load_dotenv()
