@@ -36,6 +36,7 @@ def main():
             preprocess(args.ticker, resolution)
         case "model":
             hf_token = settings.hf_token
+
             if (not args.target):
                 print(f"No target specified, using default target: {settings.default_target}")
                 target = settings.default_target
@@ -43,12 +44,20 @@ def main():
                 target = args.target
 
             if (not args.pred_length):
-                print(f"No prediction length specified, using default length of {settings.default_prediction_length}")
-                pred_length =  settings.default_prediction_length
+                print(f"No prediction length specified, using default length of {settings.default_pred_length}")
+                pred_length =  settings.default_pred_length
             else:
                 pred_length = args.pred_length
 
-            run_model(args.ticker, target, pred_length, hf_token=hf_token, model_dir=MODEL_DIR/args.ticker, store_weights=args.store_weights, eval=args.eval)
+            run_model(
+                    args.ticker, 
+                    target,
+                    pred_length, 
+                    hf_token=hf_token, 
+                    model_dir=MODEL_DIR/args.ticker, 
+                    store_weights=args.store_weights, 
+                    eval=args.eval
+            )
         case _:
             return
     

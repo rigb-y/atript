@@ -14,6 +14,7 @@ def create_parser() -> ArgumentParser:
 
     create_fetch_parser(subparsers, shared)
     create_preprocess_parser(subparsers, shared)
+    create_model_parser(subparsers)
 
     return parser
 
@@ -44,6 +45,13 @@ def create_preprocess_parser(subparsers: _SubParsersAction, common_args: Argumen
     preproc_parser: ArgumentParser = subparsers.add_parser("preprocess", parents=[common_args])
     return preproc_parser
 
+def create_model_parser(subparsers: _SubParsersAction) -> None:
+    parser: ArgumentParser = subparsers.add_parser("model")
+    parser.add_argument("--ticker", '-t', type="str")
+    parser.add_argument("--pred_length" "-p")
+    parser.add_argument("--target" "-T", type="")
+    parser.add_argument("--store_weights" "-s", action="store_true")
+    parser.add_argument("--eval" "-e", action="store_true")
 
 def check_ticker():
     ...
