@@ -49,9 +49,7 @@ def fetch(massive_params: MassiveParameters, massive_client: RESTClient, args) -
 
     print(f"Fetched {df.shape[0]:,} observations for {args.ticker}")
 
-
-    # df = preprocess(df)
-# Write data to parquete files.
+    # Write data to parquete files.
     dates = pd.Series(df["session_end_date"], dtype="datetime64[ns]")
     for day, rows in df.groupby(dates.dt.date):
         prior: pd.DataFrame | None = load_prior_data(Path(RAW_DATA_DIR) / args.ticker, args.ticker, day, day)
