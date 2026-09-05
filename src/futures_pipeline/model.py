@@ -6,20 +6,21 @@ from .typedefs import EvaluationResult
 from futures_pipeline.datareader import load_prior_data
 from pathlib import Path
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def run_model(
     ticker,
     target,
     pred_length,
+    quantiles,
+    prediction_interval,
     hf_token=None,
     model_dir=None,
     store_weights: bool = False,
     eval: bool=False
 ) -> None:
     pipeline = load_chronos(model_dir, store_weights=store_weights, hf_token=hf_token)
-
-    quantiles = [0.1, 0.5, 0.9]
 
     # Load historical target values and past values of covariates
     data: pd.DataFrame | None = load_prior_data(PROCESSED_DATA_DIR / ticker, ticker)
@@ -35,16 +36,69 @@ def run_model(
         .reset_index(drop=True)
     )
 
+    # TODO: group mae, directional accuracy, pinball loss, and interval coverage by horizon.
+
+
     if eval:
         initial_train_size = int(context_df.shape[0] * .80)
         e = walk_forward_evaluate(pipeline, context_df, pred_length, pred_length,initial_train_size, target, quantiles)
-        eval_results: EvaluationResult = evaluate(pred_df, eval_df, target, quantiles)
+        eval_results: EvaluationResult = evaluate(e, context_df.iloc[:initial_train_size][target], target, quantiles, prediction_interval)
 
+        print(f"=== POINT FORECAST METRICS ===")
         print(f"MAE: {eval_results.mae:.8f}")
         print(f"Baseline MAE: {eval_results.baseline_mae:.8f}")
         print(f"MAE Skill: {eval_results.mae_skill:.2%}")
         print(f"RMSE: {eval_results.rmse:.8f}")
-        print(f"Directional accuracy: {eval_results.directional_accuracy:.8f}")
+        print(f"Directional accuracy: {eval_results.directional_accuracy:.8f}\n")
+
+        loss_skill = {
+                q: 1 - eval_results.loss[q] / eval_results.baseline_loss[q]
+                if eval_results.baseline_loss[q] != 0 else np.nan
+                for q in quantiles
+        }
+
+        print(f"=== QUANTILE LOSS ===")
+        for t in zip(
+            eval_results.loss.items(),
+            eval_results.baseline_loss.items(),
+            loss_skill.items(),
+        ):
+            (quantile, avg_loss), (_, baseline_loss), (_, loss_skill) = t
+            print(f"avg loss for {quantile:.2%}th quantile: {avg_loss:.10f}")
+            print(f"avg baseline loss for {quantile:.2%}th quantile: {baseline_loss:.10f}")
+            print(f"loss skill for {quantile:.2%}th quantile: {loss_skill:.2%}\n")
+
+        print(f" === Quantile Calibration === ")
+        for q, v in eval_results.quantile_calibration.items():
+            print(f"q={q}: {v}")
+
+        print(f" \n=== Calibration Error === ")
+        for q, v in eval_results.calibration_error.items():
+            print(f"q={q}: {v}")
+
+        print(f"\n=== PREDICTION INTERVAL ===")
+        print(f"Mean PI coverage: {eval_results.pi_coverage:.2%}")
+        print(f"Nominal coverage: {eval_results.nominal_coverage:.2%}")
+        print(f"Mean PI width: {eval_results.mean_interval_width:.8f}")
+
+    else:
+        pred_df = predict_chronos(pipeline, context_df, pred_length, target, quantiles)
+
+        ts_context = context_df.set_index('model_timestamp')[target].tail(256)
+        ts_pred = pred_df.set_index("model_timestamp")
+
+        ts_context.plot(label="historical data", figsize=(12,3))
+        ts_pred['predictions'].plot(label="forecast")
+
+        plt.fill_between(
+                ts_pred.index,
+                ts_pred["0.1"],
+                ts_pred["0.9"],
+                alpha=0.7,
+                label="prediction interval"
+        )
+        plt.legend()
+        plt.show()
 
 
 def predict_chronos(
@@ -89,7 +143,6 @@ def load_chronos(model_dir: Path | None = None, store_weights=False, hf_token=No
 
     return pipeline
 
-
 """
 pinball loss function.
 """
@@ -102,9 +155,10 @@ def pinball_loss(y_true, y_pred, quantile):
 
 def walk_forward_evaluate(pipeline, context_df, step, horizon, initial_train_size, target, quantiles):
     results: list[pd.DataFrame] = []
-    for end in range(initial_train_size, context_df.shape[0], step):
-        pred_df = predict_chronos(pipeline, context_df[: end], horizon, target, quantiles)
-        eval_df = context_df[['ticker','model_timestamp', target]].iloc[end: end + horizon]
+    last = context_df.shape[0] - horizon
+    for window_len in range(initial_train_size, last + 1, step):
+        pred_df = predict_chronos(pipeline, context_df[: window_len], horizon, target, quantiles)
+        eval_df = context_df[['ticker','model_timestamp', target]].iloc[window_len: window_len + horizon]
         results.append(pred_df.merge(
                 eval_df,
                 on=['ticker','model_timestamp'],
@@ -115,18 +169,11 @@ def walk_forward_evaluate(pipeline, context_df, step, horizon, initial_train_siz
     return pd.concat(results, ignore_index=True)
 
 def evaluate(
-    pred_df: pd.DataFrame, eval_df: pd.DataFrame, target: str, quantiles: list[float]
+        eval: pd.DataFrame, hold_out_set: pd.Series, target: str, quantiles: list[float], prediction_interval: tuple[float, float]
 ) -> EvaluationResult:
 
-    evaluation = pred_df.merge(
-        eval_df[["ticker", "model_timestamp", target]],
-        on=["ticker", "model_timestamp"],
-        how="inner",
-        validate="one_to_one",
-    )
-
-    actual = evaluation[target]
-    predicted = evaluation["predictions"]
+    actual = eval[target]
+    predicted = eval["predictions"]
     error = actual - predicted
 
     mae: float = error.abs().mean()
@@ -142,11 +189,54 @@ def evaluate(
 
     mae_skill = 1 - mae / baseline_mae
 
-    return EvaluationResult(
-        pred_df, eval_df, mae, baseline_mae, mae_skill, rmse, directional_accuracy, {}
-    )
+    df = eval.set_index("model_timestamp")
 
-    # TODO: Write loss function
+    loss: dict[float, float] = {}
     for quantile in quantiles:
-        loss = pinball_loss(evaluation[quantile], evaluation[target], quantile)
-        print(loss)
+        loss[quantile] = pinball_loss(eval[target], eval[str(quantile)], quantile).mean()
+
+    baseline_loss: dict[float, float] = {}
+
+    # Baseline for quantiles.
+    for q in quantiles:
+        # Use a zero-return baseline for median.
+        if q == 0.5:
+            baseline_value = 0
+        # Use a q-quantile computed from history.
+        else:
+            baseline_value = hold_out_set.quantile(q)
+
+        baseline_loss[q] = pinball_loss(actual, np.full(len(actual), baseline_value), q).mean()
+
+    lower_bound, upper_bound = prediction_interval
+    pi_coverage: float = ((eval[str(lower_bound)] <= eval[target]) & (eval[target] <= eval[str(upper_bound)])).mean()
+    nominal_coverage = upper_bound - lower_bound
+    mean_interval_width = (eval[str(upper_bound)] - eval[str(lower_bound)]).mean()
+
+    # Ratio of the amount of actual values below its prediction.
+    quantile_calibration: dict[float, float] = {
+            q: (actual <= eval[str(q)]).mean()
+            for q in quantiles
+    }
+    calibration_error: dict[float, float] = {
+            q: quantile_calibration[q] - q
+            for q in quantiles
+    }
+
+
+    return EvaluationResult (
+        df['predictions'], 
+        df['returns'], 
+        mae, 
+        baseline_mae, 
+        mae_skill, 
+        rmse, 
+        directional_accuracy, 
+        loss, 
+        baseline_loss,
+        pi_coverage,
+        nominal_coverage,
+        mean_interval_width,
+        quantile_calibration,
+        calibration_error,
+    )
