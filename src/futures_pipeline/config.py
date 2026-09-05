@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -11,14 +11,21 @@ FORECAST_DATA_DIR: Path = DATA_DIR / "forecasts"
 MODEL_DIR: Path = PROJECT_ROOT / "models"
 
 
+@dataclass(frozen=True)
+class Defaults:
+    resolution: str = "15min"
+    target: str = "returns"
+    pred_length: int = 24
+    quantiles: list[float] = field(default_factory=lambda: [0.1,0.5,0.9])
+    prediction_interval: tuple[float, float] = (0.1, 0.9)
+
 @dataclass
 class Settings:
     massive_api_key: str
     hf_token: str
-    default_resolution: str = "15min"
     request_limit: int  = 100
-    default_target: str = "returns"
-    default_pred_length: int = 24
+    defaults: Defaults = Defaults()
+
 
 def load_settings() -> Settings:
     load_dotenv()
