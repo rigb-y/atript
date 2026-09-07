@@ -1,7 +1,7 @@
 from massive.rest.futures import FuturesAgg
 from massive import RESTClient
 from copy import copy
-from .typedefs import MassiveParameters
+from .typedefs import MassiveParameters 
 from collections.abc import Iterator
 import pandas as pd
 from datetime import datetime, timedelta
@@ -67,8 +67,7 @@ def load_prior_data(data_dir: Path,
     else:
         start_date = date.fromisoformat(begin) if isinstance(begin, str) else begin
     if not end:
-        end_date = max(
-            date.fromisoformat(file.stem.removeprefix(f"{ticker}-"))
+        end_date = max( date.fromisoformat(file.stem.removeprefix(f"{ticker}-"))
             for file in data_dir.iterdir()
             if (file.is_file())
         )
@@ -138,7 +137,11 @@ def load_last_n(data_dir: Path, ticker: str, n: int) -> pd.DataFrame | None:
         next_file = next(it, None)
         if not next_file:
             break
-        next_df: pd.DataFrame = pd.read_parquet(next_file).iloc[:n]
+        next_df: pd.DataFrame = (
+            pd.read_parquet(next_file)
+            .sort_values(by="window_start", ascending=False)
+            .iloc[:n]
+        )
         n -= next_df.shape[0]
         dfs.append(next_df)
 
@@ -183,12 +186,12 @@ Fetches OHLC from massive.com between a specifed date range.
 @return A generator yielding OHLC data.
 """
 def fetch_range(
-    begin: str, end: str, massive_parameters: MassiveParameters, massive_client
+    begin: date, end: date, massive_parameters: MassiveParameters, massive_client
 ) -> Iterator[FuturesAgg]:
 
     params: MassiveParameters = copy(massive_parameters)
-    params["window_start_gte"] = begin 
-    params["window_start_lte"] = (date.fromisoformat(end) + timedelta(days=1)).isoformat()
+    params["window_start_gte"] = begin.isoformat()
+    params["window_start_lte"] = (end + timedelta(days=1)).isoformat()
 
     print(f"Fetching data for {massive_parameters['ticker']} between {begin} and {end}")
     return fetch_data(massive_client, params)
@@ -216,14 +219,13 @@ def fetch_latest(
         return
 
     # Get the observations next starting window from the most recent observation.
-    next_window_start = (
-        datetime.fromisoformat(last_observation["window_start"].iloc[0])
-        + relativedelta(seconds=1)
-    ).isoformat()
-    params["window_start_gte"] = next_window_start
+    latest_window_start: datetime = last_observation["window_start"].iloc[0]
+
+    params["window_start_gte"] = latest_window_start.isoformat()
 
     print(
-        f"Fetching the latest data for {massive_parameters['ticker']} beginning at {next_window_start}"
+        f"Fetching the latest data for {massive_parameters['ticker']}"
+        f"beginning at {latest_window_start}"
     )
 
     yield from fetch_data(massive_client, params)
