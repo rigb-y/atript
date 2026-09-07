@@ -6,7 +6,8 @@ from .typedefs import MassiveParameters
 from .fetch import fetch
 from .preprocessing.preprocess import preprocess
 from .model import run_model
-from .validate import validate_input, FetchLatestArgs, FetchLookbackArgs, FetchRangeArgs, ModelArgs, PreprocessArgs, InputArgs
+from .validate import validate_input
+from .typedefs import FetchLatestArgs, FetchLookbackArgs, FetchRangeArgs, ModelArgs, PreprocessArgs, InputArgs
 
 def main():
     settings: Settings = load_settings()
@@ -23,6 +24,7 @@ def main():
                     "resolution": args.resolution,
                     "ticker": args.ticker,
                     }
+
             fetch(massive_parameters, create_massive_client(settings.massive_api_key), args)
 
         case PreprocessArgs():
@@ -46,4 +48,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-
