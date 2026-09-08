@@ -181,13 +181,12 @@ def vwap(df: pd.DataFrame) -> pd.Series:
         group['VWAP'] = vwap
         return group
 
-    data = data.sort_values("window_start")
+    data = data.sort_values("real_timestamp")
 
     vwap_df: pd.DataFrame = data.groupby('session_end_date').apply(calcuate_vwap, include_groups=False) # type:ignore
 
-    vwap_df = vwap_df.sort_values('window_start', ascending=False)
+    vwap_df = vwap_df.sort_values('real_timestamp', ascending=False)
     return vwap_df['VWAP'].reset_index(drop=True)
-
 
 
 def alpha():
