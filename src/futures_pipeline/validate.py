@@ -24,7 +24,7 @@ class FuturesOHLC(BaseModel):
     close: float = Field(allow_inf_nan=False)
     volume: int = Field(ge=0)
     transactions: int = Field(ge=0)
-    window_start: str
+    window_start: datetime
     session_end_date: str = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -39,13 +39,13 @@ class FuturesOHLC(BaseModel):
                 "Low is not less than or equal to 'open', 'close', and 'high'."
             )
         return self
-
     @field_validator("window_start", mode="before")
+
     @classmethod
-    def normalize_window_start(cls, window_start: int) -> str:
+    def normalize_window_start(cls, window_start: int) -> datetime:
         return datetime.fromtimestamp(
             window_start / 1_000_000_000, tz=timezone.utc
-        ).isoformat()
+        )
     
 
 def validate_data(observations: Iterable[FuturesAgg | bytes]) -> list[FuturesOHLC]:
@@ -58,14 +58,6 @@ def validate_data(observations: Iterable[FuturesAgg | bytes]) -> list[FuturesOHL
     return validated
 
 
-type InputArgs = (
-        CommandArgs 
-        | FetchLookbackArgs 
-        | FetchRangeArgs 
-        | FetchLatestArgs 
-        | ModelArgs 
-        | PreprocessArgs
-)
 
 class CommandArgs(BaseModel):
     ticker: str = Field(min_length=1)
@@ -77,6 +69,7 @@ class CommandArgs(BaseModel):
     def validate_resolution(cls, res):
         if not (match := re.search(r"^(\d+)(sec|min|day|hour|session|week|month|quarter|year)$", res)):
             raise ValueError("Resolution not in the correct form.")
+
         if re.match(r"(month|quarter|year|session)", match.group(2)):
             raise ValueError(f"{match.group(2)} is not yet supported. Currently supported periods are [min,sec,hour,day,week]")
 
