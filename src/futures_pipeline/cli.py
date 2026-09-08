@@ -15,6 +15,7 @@ def create_parser() -> ArgumentParser:
     create_fetch_parser(subparsers, shared)
     create_preprocess_parser(subparsers, shared)
     create_model_parser(subparsers)
+    create_fees_parser(subparsers)
 
     return parser
 
@@ -52,3 +53,17 @@ def create_model_parser(subparsers: _SubParsersAction) -> None:
     parser.add_argument("--target", "-T", type=str)
     parser.add_argument("--store_weights", "-s", action="store_true")
     parser.add_argument("--eval", "-e", action="store_true")
+
+
+def create_fees_parser(subparsers: _SubParsersAction) -> None:
+    parser: ArgumentParser = subparsers.add_parser("fees")
+
+    cost_group  = parser.add_argument_group("Trading costs", argument_default=SUPPRESS)
+    cost_group.add_argument("--entry-fee", type=float, help="Entry fee per contract")
+    cost_group.add_argument("-exit-fee",  type=float, help="Exit fee per contract")
+    cost_group.add_argument("--entry-commission", type=float, help="Entry commission per contract")
+    cost_group.add_argument("--exit-commission", type=float, help="Exit commission per contract")
+    cost_group.add_argument("--round-trip-fee", "-F", type=float, help="Round trip fee per contract")
+    cost_group.add_argument("--round-trip-commission", '-C', type=float, help="Round trip commission per contract")
+    cost_group.add_argument("--all-in-round-trip-cost", '-A', type=float, help="Round trip fees + commission per contract")
+    cost_group.add_argument("--reset", '-r', action="store_true", help="Restore configuration file to defaults")

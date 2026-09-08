@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Required, TypedDict
 from pandas import Series, DataFrame
-from .validate import CommandArgs, FetchLatestArgs, FetchRangeArgs, FetchLookbackArgs, ModelArgs, PreprocessArgs
+from .validate import CommandArgs, FetchLatestArgs, FetchRangeArgs, FetchLookbackArgs, ModelArgs, PreprocessArgs, TradingFees
 from typing import Literal
 import re
 
@@ -48,6 +48,7 @@ type InputArgs = (
         | FetchLatestArgs 
         | ModelArgs 
         | PreprocessArgs
+        | TradingFees
 )
 
 type TimedeltaUnit = Literal["s", "min", "h", "D", "W"]

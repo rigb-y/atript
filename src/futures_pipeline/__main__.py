@@ -1,4 +1,4 @@
-from .config import Settings, load_settings, MODEL_DIR
+from .config import Settings, load_settings, MODEL_DIR, initialize_config, store_fees, load_fees
 from .massive_client import create_massive_client
 from .cli import create_parser
 from argparse import ArgumentParser
@@ -7,7 +7,7 @@ from .fetch import fetch
 from .preprocessing.preprocess import preprocess
 from .model import run_model
 from .validate import validate_input
-from .typedefs import FetchLatestArgs, FetchLookbackArgs, FetchRangeArgs, ModelArgs, PreprocessArgs, InputArgs
+from .typedefs import FetchLatestArgs, FetchLookbackArgs, FetchRangeArgs, ModelArgs, PreprocessArgs, InputArgs, TradingFees
 
 def main():
     settings: Settings = load_settings()
@@ -15,7 +15,15 @@ def main():
 
     cli_args: dict = vars(settings.defaults) | vars(parser.parse_args())
 
+    reset: bool = cli_args.get("reset", False)
+    initialize_config(reset)
+    load_fees()
+
+    if (reset):
+        return
+
     args: InputArgs = validate_input(cli_args)
+
     match args:
         case FetchLatestArgs() | FetchRangeArgs() | FetchLookbackArgs():
             massive_parameters: MassiveParameters = {
@@ -43,6 +51,8 @@ def main():
                     store_weights=args.store_weights, 
                     eval=args.eval
             )
+        case TradingFees():
+            store_fees(args)
         case _:
             return
     

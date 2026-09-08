@@ -31,8 +31,7 @@ class FuturesOHLC(BaseModel):
     def validate_ohlc(self) -> Self:
         if self.high < max(self.low, self.open, self.close):
             raise ValueError(
-                "High is not greater than or equal to 'open', 'close', and 'low'."
-            )
+                "High is not greater than or equal to 'open', 'close', and 'low'.")
 
         if self.low > min(self.high, self.open, self.close):
             raise ValueError(
@@ -130,7 +129,19 @@ class ModelArgs(CommandArgs):
 class PreprocessArgs(CommandArgs):
     ...
 
+class TradingFees(BaseModel):
+    # model_config = ConfigDict(extra="allow")
+
+    entry_fee: float | None = Field(ge=0, default=None)
+    exit_fee: float | None = Field(ge=0, default=None)
+    entry_comission: float | None = Field(ge=0, default=None)
+    exit_comission: float | None = Field(ge=0, default=None)
+    tick_size: float | None= Field(ge=0, default=None)
+    price_per_tick: float | None = Field(ge=0, default=None)
+
+    
 def validate_input(args: dict):
+
     match (args.get("command"), args.get("fetch_command")):
         case ("fetch", "latest"):
             return FetchLatestArgs(**args)
@@ -142,9 +153,10 @@ def validate_input(args: dict):
             return PreprocessArgs(**args)
         case ("model", _):
             return ModelArgs(**args)
+        case ("fees", _):
+            return TradingFees(**args)
 
     return CommandArgs(**args)
-
 
 
 
