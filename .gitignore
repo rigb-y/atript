@@ -9,6 +9,7 @@ data/
 *.toc
 *.log
 *.out
+config.toml
 minted_main
 SKILL.MD
 models/
