@@ -18,6 +18,7 @@ dependencies = [
     "fastparquet",
     "pydantic",
     "autogluon.timeseries",
+    "tomlkit"
 ]
 [project.scripts]
 atript = "futures_pipeline.__main__:main"
