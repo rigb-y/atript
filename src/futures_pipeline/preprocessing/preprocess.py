@@ -1,8 +1,9 @@
 import pandas as pd
 from ..datareader import load_prior_data
 from pathlib import Path
-from ..config import PROCESSED_DATA_DIR, RAW_DATA_DIR, load_settings, Settings
-import re
+from ..config import PROCESSED_DATA_DIR, RAW_DATA_DIR
+from ..typedefs import CandleResolution
+import numpy as np
 from .indicators import (
     smoothed_rsi,
     percent_b,
@@ -15,13 +16,10 @@ from .indicators import (
     vwap,
     ema,
 )
-def preprocess(ticker: str, resolution: str | None = None) -> None:
+
+def preprocess(ticker: str, resolution: str) -> None:
     processed_path: Path = Path(PROCESSED_DATA_DIR) / ticker
     raw_path: Path = Path(RAW_DATA_DIR) / ticker
-    settings: Settings = load_settings()
-
-    if resolution == None:
-        resolution = settings.default_resolution
 
     processed_path.mkdir(exist_ok=True, parents=True)
 
@@ -33,6 +31,8 @@ def preprocess(ticker: str, resolution: str | None = None) -> None:
 
     print(f"Processing {data.shape[0]} records for {ticker}.")
 
+
+
     # prior_n: pd.DataFrame | None = load_last_n(
     #     raw_path, ticker, settings.indicator_lookback
     # )
@@ -41,28 +41,73 @@ def preprocess(ticker: str, resolution: str | None = None) -> None:
     # if prior_n is not None:
     #     data = pd.concat([data, prior_n], ignore_index=True)
 
+    raw_columns = [
+            "window_start",
+            "ticker",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "session_end_date"
+    ]
+    model_features = [
+            "returns",
+            "volume",
+            "percent_b",
+            "rsi",
+            "close_to_ema",
+            "close_to_vwap",
+            "has_time_gap",
+            "log_elapsed_intervals"
+    ]
+
+    missing_cols = set(raw_columns) - set(data.columns)
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {missing_cols}.")
+
+    data['window_start'] = pd.to_datetime(
+            data['window_start'],
+            utc=True,
+            errors="coerce"
+    )
+
+    data['real_timestamp'] = data['window_start']
+    data = data.drop(['window_start'], axis=1)
+
+    missing_raw = data[raw_columns].isna().any(axis=1)
+    if missing_raw.any():
+        raise ValueError(f"Found {missing_raw.sum()} incomplete raw rows.")
+
+
     data = (
-        data.drop_duplicates(subset=["window_start"])
-        .sort_values("window_start", ascending=False, kind="stable")
+        data.drop_duplicates(subset=["real_timestamp"])
+        .sort_values("real_timestamp", ascending=False, kind="stable")
         .reset_index(drop=True)
     )
 
-    data = convert_timestamps(data, resolution)
+    candle_resolution: CandleResolution = CandleResolution(resolution)
+
     data["returns"] = get_returns(data["close"])
 
+    # data["sma"] = sma(data["close"])
+    # data["wma"] = wma(data["close"])
     data["rsi"] = smoothed_rsi(data["close"])
     data["percent_b"] = percent_b(data["close"])
-    data["sma"] = sma(data["close"])
-    data["wma"] = wma(data["close"])
     data["VWAP"] = vwap(data)
     data["ema"] = ema(data["close"])
 
-    data = data.dropna().reset_index(drop=True)
-    print(data[['model_timestamp']].head(30))
+    # Percentage distance between the close and its EMA / VWAP. More useful for forecasting returns.
+    data['close_to_ema'] = data['close'] / data["ema"] - 1
+    data['close_to_vwap'] = data['close'] / data['VWAP'] - 1
 
 
-    # data = data.drop(["open", "high", "low", "close"], axis=1)
-    # print(data)
+    data = get_time_features(data, candle_resolution)
+
+    data = data.replace([np.inf, -np.inf], np.nan)
+    data = data.dropna(subset=model_features).reset_index(drop=True)
+
+    data = convert_timestamps(data, candle_resolution)
 
     # Write data to parquete files.
     dates = pd.Series(data["session_end_date"], dtype="datetime64[ns]")
@@ -71,26 +116,44 @@ def preprocess(ticker: str, resolution: str | None = None) -> None:
         prior: pd.DataFrame | None = load_prior_data(processed_path, ticker, day, day)
         if prior is not None:
             rows = pd.concat([rows, prior], ignore_index=True).drop_duplicates(
-                subset="window_start"
+                subset="real_timestamp"
             )
         rows = rows.sort_values(
-            "window_start", ascending=False, kind="stable"
+            "real_timestamp", ascending=False, kind="stable"
         ).reset_index(drop=True)
         rows.to_parquet(path, index=False)
         print(f"Wrote {path} ({rows.shape[0]:,} rows)")
 
 
-def convert_timestamps(df: pd.DataFrame, resolution: str) -> pd.DataFrame:
-    match = re.match(r"^(\d+)(sec|min|hour|session|week|month|quarter|year)$", resolution)
-    if (match is None):
-        raise ValueError(f"{resolution} is not a valid resolution.")
+"""
 
-    res: int = int(match.group(1))
-    period: str = match.group(2)
+"""
+def convert_timestamps(df: pd.DataFrame, resolution: CandleResolution) -> pd.DataFrame:
 
-    df["model_step"] = df.groupby("ticker").cumcount(ascending=False)
+    model_step = df.groupby("ticker").cumcount(ascending=False)
 
     start = pd.Timestamp("2000-01-01")
-    df["model_timestamp"] = start + pd.to_timedelta(df["model_step"] * res, unit=period) # type: ignore
+    df["model_timestamp"] = start + pd.to_timedelta(model_step * resolution.length, unit=resolution.to_timedelta_unit()) # type: ignore
+
+    return df
+
+
+# Covariate features to preserve  market-time information.
+def get_time_features(df: pd.DataFrame, resolution: CandleResolution) -> pd.DataFrame:
+    interval_length = pd.Timedelta(
+        resolution.length, unit=resolution.to_timedelta_unit()
+    )
+
+    # NOTE: Groupby ticker before shifting if considering multiple tickers in a single dataset.
+    elapsed_intervals = (
+        ((df["real_timestamp"] - df["real_timestamp"].shift(-1)) / interval_length) # type: ignore
+        .fillna(1.0)
+        .astype("float32")
+    )
+    df["has_time_gap"] = (elapsed_intervals > 1.0).astype("int8")
+
+    # Intervals are very skewed, compute their log.
+    log_interval = np.log(elapsed_intervals)
+    df['log_elapsed_intervals'] = log_interval
 
     return df
