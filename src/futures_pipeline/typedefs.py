@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Required, TypedDict
 from pandas import Series, DataFrame
 from .validate import CommandArgs, FetchLatestArgs, FetchRangeArgs, FetchLookbackArgs, ModelArgs, PreprocessArgs
-from datetime import date
 from typing import Literal
 import re
 
