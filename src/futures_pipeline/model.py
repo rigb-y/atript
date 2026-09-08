@@ -40,7 +40,7 @@ def run_model(
     if eval:
         initial_train_size = int(context_df.shape[0] * .80)
         e = walk_forward_evaluate(pipeline, context_df, pred_length, pred_length,initial_train_size, target, quantiles)
-        eval_results: EvaluationResult = evaluate(e, context_df.iloc[:initial_train_size][target], target, quantiles, prediction_interval)
+        eval_results: EvaluationResult = evaluate(e, target, quantiles, prediction_interval)
 
         print(f"=== POINT FORECAST METRICS ===")
         print(eval_results.by_horizon.to_string())
@@ -122,7 +122,16 @@ def predict_chronos(
     return pred_df
 
 
-def load_chronos(model_dir: Path | None = None, store_weights=False, hf_token=None):
+"""
+Loads a Chronos model from local storage or Hugging Face.
+
+@param model_dir the name of the directory where the model is located.
+@param store_weights Boolean flag for storing weights locally.
+@param hf_token A Hugging Face token.
+
+@returns A ``Chronos2Pipeline``
+"""
+def load_chronos(model_dir: Path | None = None, store_weights: bool=False, hf_token: str | None=None) -> Chronos2Pipeline:
     pipeline: Chronos2Pipeline | None = None
 
     if model_dir is not None and model_dir.exists():
@@ -145,7 +154,21 @@ def load_chronos(model_dir: Path | None = None, store_weights=False, hf_token=No
     return pipeline
 
 """
-pinball loss function.
+Computes the element-wise pinball loss for a quantile forecast.
+
+Pinball loss is asymmetric. Underpredictions receive weight ``quantile``,
+while overpredictions receive weight ``1 - quantile``. Higher quantiles
+therefore penalize underprediction more heavily.
+
+The loss for quantile ``q`` is:
+    q * (y_true - y_pred)          if y_true >= y_pred
+    (q - 1) * (y_true - y_pred)    otherwise
+
+@param y_true Observed target values.
+@param y_pred Predicted values for the specified quantile.
+@param quantile Quantile level associated with ``y_pred``
+
+@returns: A NumPy array containing one nonnegative loss value per observation.
 """
 def pinball_loss(y_true, y_pred, quantile) -> np.ndarray:
     return np.where(
@@ -202,8 +225,33 @@ def walk_forward_evaluate(
     df = pd.concat(results, ignore_index=True)
     return df
 
+"""
+Computes point, quantile, interval, calibration, and horizon-based
+forecast metrics for an evaluation set.
+
+Metrics:
+    - Mean absolute error (MAE)
+    - Root mean squared error (RMSE)
+    - Directional accuracy
+    - MAE relative to a zero-return baseline
+    - MAE skill score
+    - Pinball loss for each quantile
+    - Quantile baseline loss and skill score
+    - Prediction-interval coverage
+    - Mean prediction-interval width
+    - Quantile calibration and calibration error
+    - Point and probabilistic metrics grouped by forecast horizon
+    
+@param eval  Evaluation observations and forecasts.
+@param target Name of the column containing the observed target values.
+@param prediction_interval
+@param quantiles Quantile levels to evaluate.
+@param prediction_interval  Lower and upper quantile levels defining the prediction interval.
+
+@returns  An ``EvaluationResult`` containing the evaluation metrics.
+"""
 def evaluate(
-        eval: pd.DataFrame, context: pd.Series, target: str, quantiles: list[float], prediction_interval: tuple[float, float]
+        eval: pd.DataFrame,  target: str, quantiles: list[float], prediction_interval: tuple[float, float]
 ) -> EvaluationResult:
 
     actual = eval[target]
@@ -318,5 +366,3 @@ def evaluate(
         quantile_calibration,
         calibration_error,
     )
-def compute_loss():
-    ...
