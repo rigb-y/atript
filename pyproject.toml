@@ -13,10 +13,11 @@ dependencies = [
     "pandas",
     "numpy",
     "anthropic",
-    "chronos-forecasting>=2.0",
+    "chronos-forecasting>=2.3.2",
     "pandas[pyarrow]",
     "fastparquet",
     "pydantic",
+    "autogluon.timeseries",
 ]
 [project.scripts]
 atript = "futures_pipeline.__main__:main"
