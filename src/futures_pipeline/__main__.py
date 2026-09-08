@@ -17,7 +17,6 @@ def main():
 
     reset: bool = cli_args.get("reset", False)
     initialize_config(reset)
-    load_fees()
 
     if (reset):
         return

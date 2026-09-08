@@ -18,7 +18,6 @@ def create_parser() -> ArgumentParser:
     create_fees_parser(subparsers)
 
     return parser
-
 def create_fetch_parser(subparsers: _SubParsersAction, common_args: ArgumentParser | None = None) -> ArgumentParser:
     if common_args is None:
         common_args = ArgumentParser(add_help=False)
@@ -60,7 +59,7 @@ def create_fees_parser(subparsers: _SubParsersAction) -> None:
 
     cost_group  = parser.add_argument_group("Trading costs", argument_default=SUPPRESS)
     cost_group.add_argument("--entry-fee", type=float, help="Entry fee per contract")
-    cost_group.add_argument("-exit-fee",  type=float, help="Exit fee per contract")
+    cost_group.add_argument("--exit-fee",  type=float, help="Exit fee per contract")
     cost_group.add_argument("--entry-commission", type=float, help="Entry commission per contract")
     cost_group.add_argument("--exit-commission", type=float, help="Exit commission per contract")
     cost_group.add_argument("--round-trip-fee", "-F", type=float, help="Round trip fee per contract")

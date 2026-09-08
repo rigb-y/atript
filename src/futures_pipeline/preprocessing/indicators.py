@@ -1,3 +1,11 @@
+
+# backtest. Start with horizon 1.
+# assuming entry exactly at close_t may be too optimistic. Next available price plus slippage.
+# Convert forecasts into a trading rule.
+
+# Use autogluon to fine-tune the model to our market data.
+# Keep the  zero-shot model for comparison.
+
 import pandas as pd
 import numpy as np
 """

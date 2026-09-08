@@ -2,11 +2,12 @@ import pandas as pd  # requires: pip install 'pandas[pyarrow]'
 from pathlib import Path
 from chronos import Chronos2Pipeline
 from .config import PROCESSED_DATA_DIR
-from .typedefs import EvaluationResult
+from .typedefs import EvaluationResult, TradingFees
 from futures_pipeline.datareader import load_prior_data
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
+from .config import load_fees
 
 
 def run_model(
@@ -39,7 +40,7 @@ def run_model(
 
     if eval:
         initial_train_size = int(context_df.shape[0] * .80)
-        e = walk_forward_evaluate(pipeline, context_df, pred_length, pred_length,initial_train_size, target, quantiles)
+        e = walk_forward_predict(pipeline, context_df, pred_length, pred_length,initial_train_size, target, quantiles)
         eval_results: EvaluationResult = evaluate(e, target, quantiles, prediction_interval)
 
         print(f"=== POINT FORECAST METRICS ===")
@@ -191,7 +192,7 @@ Performs walk-forward evaluation using an expanding window to obtain a set of ev
 
 @Note: For a fair baseline quantile loss, a new baseline value must be computed for every expansion.
 """
-def walk_forward_evaluate(
+def walk_forward_predict(
     pipeline: Chronos2Pipeline,
     context_df: pd.DataFrame,
     step: int,
@@ -366,3 +367,39 @@ def evaluate(
         quantile_calibration,
         calibration_error,
     )
+
+# NOTE: backtest must confirm the entry was achievable. The safest assumption is that execution happens after close_t, with spread and slippage.
+#       Return is calculated assuming entry at exactly close_t. In practice, there is some delay. Backtest must model this delay.
+# start walk-forward with horizon = 1, step = 1
+# Need to account for trading costs.
+
+# - Net P&L
+#  - Total and annualized return
+#  - Number of trades
+#  - Win rate
+#  - Average profit and loss
+#  - Profit factor
+#  - Maximum drawdown
+#  - Sharpe or Sortino ratio
+#  - Turnover
+#  - Exposure
+#  - Long versus short performance
+#  - Performance by forecast horizon
+#  - Performance after gaps
+#  - Performance by time of day
+def backtest_strategy(forecasts, market_data):
+    fees: TradingFees = load_fees()
+    unset = {name for name in TradingFees.model_fields if name is None}
+    if len(unset):
+        raise ValueError(f"Unset trading fees: {",".join(name for name in unset)}")
+
+    # Define cost threshold as the expected round-trip trading cost expressed in the same units as your prediction
+    # Calculate signal based on a comparison of the predicted return and this threshold.
+    # Threshold needs to estimate
+    #   - Entry comission and fees
+    #   - Exit comission and fees
+    #   - Bid-ask spread
+    #   - Exit slippage
+    #   - Optionally some random error term.
+
+    # Backtest iterates through
