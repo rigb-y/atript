@@ -130,14 +130,17 @@ class PreprocessArgs(CommandArgs):
     ...
 
 class TradingFees(BaseModel):
-    # model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
 
     entry_fee: float | None = Field(ge=0, default=None)
     exit_fee: float | None = Field(ge=0, default=None)
-    entry_comission: float | None = Field(ge=0, default=None)
-    exit_comission: float | None = Field(ge=0, default=None)
-    tick_size: float | None= Field(ge=0, default=None)
-    price_per_tick: float | None = Field(ge=0, default=None)
+    entry_commission: float | None = Field(ge=0, default=None)
+    exit_commission: float | None = Field(ge=0, default=None)
+    # tick_size: float | None= Field(ge=0, default=None)
+    # price_per_tick: float | None = Field(ge=0, default=None)
+
+
+    
 
     
 def validate_input(args: dict):
@@ -154,6 +157,7 @@ def validate_input(args: dict):
         case ("model", _):
             return ModelArgs(**args)
         case ("fees", _):
+
             return TradingFees(**args)
 
     return CommandArgs(**args)
