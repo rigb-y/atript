@@ -12,22 +12,22 @@ from itertools import chain
 from .config import RAW_DATA_DIR
 from .validate import validate_data
 from massive import RESTClient
-from .typedefs import MassiveParameters
+from .typedefs import MassiveParameters, InputArgs, FetchLookbackArgs, FetchRangeArgs, FetchLatestArgs
 
 # VWAP, RSI, EMA, ATR, bollinger Bands (20, 2\sigma), MACD
 
-def fetch(massive_params: MassiveParameters, massive_client: RESTClient, args) -> None:
+def fetch(massive_params: MassiveParameters, massive_client: RESTClient, args: InputArgs) -> None:
 
     Path(f"{RAW_DATA_DIR}/{args.ticker}").mkdir(parents=True, exist_ok=True)
-    match args.fetch_command:
-        case "latest":
+    match args:
+        case FetchLatestArgs():
             data = fetch_latest(massive_params, massive_client)
-        case "lookback":
+        case FetchLookbackArgs():
             data = fetch_lookback(
                 args.period, args.depth, massive_params, massive_client
             )
-        case "range":
-            data = fetch_range(args.begin, args.end, massive_params, massive_client)
+        case FetchRangeArgs():
+            data = fetch_range(args.begin_date, args.end_date, massive_params, massive_client)
         case _:
             return
 
